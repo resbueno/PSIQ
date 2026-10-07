@@ -40,7 +40,7 @@ class ContextoConsultorioMiddleware:
             )
             request.session["uso_marcado_em"] = agora
 
-    
+    @staticmethod
     def _suporte(request, usuario):
         """Operador da plataforma dentro da conta do cliente, so enquanto houver autorizacao vigente (somente leitura)."""
         consultorio_id = request.session.get("suporte_consultorio_id")
