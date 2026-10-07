@@ -12,6 +12,9 @@ RUN pip install --no-cache-dir -r requirements.txt && if [ "$INSTALAR_DEV" = "1"
 COPY . .
 RUN DJANGO_SECRET_KEY=build DJANGO_DEBUG=false python manage.py collectstatic --noinput
 
+# Diretorios de dados com dono psiq: volumes novos herdam o dono da imagem (sem isso o upload falha com Permission denied).
+RUN mkdir -p /data/anexos /var/lib/psiq && chown psiq:psiq /data/anexos /var/lib/psiq
+
 USER psiq
 EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=5s --retries=3 CMD python -c "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/saude/', timeout=4).status == 200 else 1)"
