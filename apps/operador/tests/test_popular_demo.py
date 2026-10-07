@@ -13,7 +13,7 @@ pytestmark = pytest.mark.django_db
 
 
 def test_carga_demo_cria_todos_os_papeis_e_dados_coerentes(capsys, settings):
-    call_command("popular_demo")
+    call_command("popular_demo", forcar=True)
     saida = capsys.readouterr().out
     consultorio = Consultorio.objects.get(nome="Clínica Demo PSIQ")
     assert "Portal do paciente" in saida and str(consultorio.pk) in saida
@@ -42,9 +42,9 @@ def test_carga_demo_cria_todos_os_papeis_e_dados_coerentes(capsys, settings):
 
 
 def test_carga_demo_e_idempotente(capsys):
-    call_command("popular_demo")
+    call_command("popular_demo", forcar=True)
     capsys.readouterr()
-    call_command("popular_demo")
+    call_command("popular_demo", forcar=True)
     assert "já existe" in capsys.readouterr().out
     assert Consultorio.objects.filter(nome="Clínica Demo PSIQ").count() == 1
 
