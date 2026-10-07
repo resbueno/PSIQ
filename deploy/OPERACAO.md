@@ -42,3 +42,11 @@ Tarefas agendadas (cron do host ou `docker compose exec app ...`):
 4. Revisão de segurança dedicada: isolamento entre consultórios, permissões, dados em logs, dependências (`pip-audit` roda no CI).
 5. Registro dos apps OAuth no Google e na Microsoft e revisão deles (calendários externos).
 6. Provedor de e-mail transacional com SPF/DKIM e chaves VAPID para push.
+
+## Homologação (VPS compartilhado, https://rbbrdevhomolog.duckdns.org/psiq/)
+
+- Pasta `/psiq` (código em `app/`, segredos em `.env`, backups em `backup/dados/`). Contêineres `psiq-psiq-web-1` e `psiq-db-1`, projeto Docker `psiq`; só `127.0.0.1:8088` no host e o apelido `psiq_app` na rede do gateway.
+- Gateway (`/root/gateway/nginx.conf`): blocos `/psiq/` (prefixo removido, upstream por variável para não derrubar o gateway se o PSIQ parar) e limite de taxa próprio (`psiqauth`, 20 req/min por IP) para login, 2FA, código do portal e links públicos. Antes de editar: backup do arquivo, gravar **sem trocar o inode** (`cat novo > nginx.conf`), `nginx -t` e só então `nginx -s reload`.
+- Atualizar: `git -C /psiq/app pull` e `docker compose -p psiq -f app/deploy/docker-compose.homolog.yml -f app/deploy/docker-compose.homolog.gateway.yml --env-file .env up -d --build psiq-web` (+ `migrate`).
+- Backup diário 02:30 (`deploy/backup/backup.sh`): dump + anexos, cifrado com a chave pública; **a chave privada não fica no servidor**. Restauração testada com `deploy/backup/restaurar-teste.sh <chave-privada>` (banco temporário, confere migrações, RLS e gatilhos). Falta copiar os backups para outro provedor.
+- Cron do root (bloco `PSIQ-INICIO`/`PSIQ-FIM`): lembretes, calendários, saúde, inadimplência, cobranças recorrentes e backup.
