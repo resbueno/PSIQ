@@ -1,7 +1,7 @@
 # Complemento do compose de homologacao para o VPS que tem um gateway nginx compartilhado (/root/gateway).
 # Liga SO a aplicacao (nunca o banco) a rede do gateway, com o apelido "psiq_app" usado no nginx.conf.
 services:
-  app:
+  psiq-web:
     networks:
       interna: {}
       gateway:

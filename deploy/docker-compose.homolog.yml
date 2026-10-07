@@ -19,7 +19,7 @@ services:
       interval: 5s
       retries: 20
 
-  app:
+  psiq-web:
     build:
       context: ..
       dockerfile: deploy/Dockerfile
