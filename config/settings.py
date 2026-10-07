@@ -24,6 +24,7 @@ INSTALLED_APPS = [
     "apps.auditoria",
     "apps.pacientes",
     "apps.agenda",
+    "apps.prontuario",
 ]
 
 MIDDLEWARE = [
@@ -138,3 +139,9 @@ EMAIL_HOST_USER = env("EMAIL_HOST_USER", default="")
 EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD", default="")
 EMAIL_USE_TLS = env.bool("EMAIL_USE_TLS", default=False)
 DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", default="PSIQ <nao-responder@localhost>")
+
+# Prontuario
+PSIQ_ANEXOS_DIR = env("PSIQ_ANEXOS_DIR", default=str(BASE_DIR / "armazenamento"))
+PSIQ_ANEXO_MAX_BYTES = 10 * 1024 * 1024
+PSIQ_ANEXO_EXTENSOES = ("pdf", "png", "jpg", "jpeg", "txt", "doc", "docx")
+PSIQ_INATIVIDADE_PRONTUARIO_SEGUNDOS = env.int("PSIQ_INATIVIDADE_PRONTUARIO_SEGUNDOS", default=900)

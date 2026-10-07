@@ -17,3 +17,6 @@ docs/
 
 # GitHub Actions (workflows)
 .github/workflows/
+
+# Anexos cifrados em disco (desenvolvimento)
+armazenamento/

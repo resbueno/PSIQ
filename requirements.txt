@@ -7,3 +7,4 @@ qrcode>=8.0
 cryptography>=43.0
 gunicorn>=22.0
 whitenoise>=6.7
+fpdf2>=2.8
