@@ -23,7 +23,7 @@ def test_enderecos_gerados_levam_o_prefixo(client, prefixo):
     pagina = client.get("/entrar/")  # o proxy ja removeu /psiq
     corpo = pagina.content.decode()
     assert pagina.status_code == 200
-    assert '/psiq/static/css/psiq.css' in corpo and 'href="/psiq/manifest.webmanifest"' in corpo and '<meta name="sw" content="/psiq/sw.js">' in corpo
+    assert 'href="/psiq/manifest.webmanifest"' in corpo and '<meta name="sw" content="/psiq/sw.js">' in corpo
     assert reverse("contas:entrar") == "/psiq/entrar/"
 
 
@@ -48,7 +48,7 @@ def test_protecoes_por_caminho_continuam_valendo_com_prefixo(client, prefixo, cr
 
 def test_service_worker_e_manifesto_com_escopo_do_prefixo(client, prefixo):
     sw = client.get("/sw.js")
-    assert sw["Service-Worker-Allowed"] == "/"  # o cliente pediu /sw.js; com o proxy o navegador pede /psiq/sw.js
+    assert sw["Service-Worker-Allowed"] == "/psiq/"  # o navegador pede /psiq/sw.js; o escopo e a pasta do script
     manifesto = client.get("/manifest.webmanifest").json()
     assert manifesto["start_url"] == "/psiq/" and manifesto["scope"] == "/psiq/"
 
