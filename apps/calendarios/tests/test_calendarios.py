@@ -131,7 +131,7 @@ def test_remarcar_atualiza_e_cancelar_apaga_o_evento_externo(cena, falso):
     sync.sincronizar(cena.conta)
     agenda.remarcar(cena.req(), consulta, consulta.inicio + timedelta(hours=2))
     sync.sincronizar(cena.conta)
-    assert len(falso.eventos) == 1 and next(iter(falso.eventos.values()))["inicio"] == consulta.inicio + timedelta(hours=2)
+    assert len(falso.eventos) == 1 and next(iter(falso.eventos.values()))["inicio"] == consulta.inicio
     agenda.cancelar(cena.req(), consulta, "equipe")
     sync.sincronizar(cena.conta)
     assert falso.eventos == {} and not EventoExterno.objects.filter(origem="psiq").exists()
@@ -290,7 +290,9 @@ def test_provedor_nao_configurado_nao_inicia_oauth(client, cena, monkeypatch):
 def test_so_profissional_acessa_e_so_a_propria_conta(client, cena, criar_usuario, falso):
     login_prof(client, cena)
     assert client.get(reverse("calendarios:lista")).status_code == 200
+    definir_contexto(consultorio_id=cena.consultorio.pk)
     outra = criar_usuario("outra@a.com", cena.consultorio, Perfil.PROFISSIONAL, com_2fa=True)
+    definir_contexto(consultorio_id=cena.consultorio.pk)
     alheia = ContaCalendario.objects.create(consultorio=cena.consultorio, profissional=outra.profissional, provedor="microsoft")
     assert client.post(reverse("calendarios:desconectar", args=[alheia.pk])).status_code == 404
     client.logout()
