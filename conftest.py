@@ -5,7 +5,10 @@ from apps.contas.models import Perfil, Profissional, Usuario, Vinculo
 from apps.core.tenancy import contexto
 from apps.plataforma.models import Consultorio
 
+import itertools
+
 SENHA = "uma-senha-bem-longa-123"
+_registros = itertools.count(1000)
 
 
 @pytest.fixture(autouse=True)
@@ -30,7 +33,7 @@ def criar_usuario(db):
         usuario = Usuario.objects.create_user(email, SENHA, nome=nome)
         if perfil == Perfil.PROFISSIONAL:
             Profissional.objects.create(
-                usuario=usuario, tipo="psicologo", conselho="CRP", numero=registro or str(abs(hash(email)))[:6], uf="SP"
+                usuario=usuario, tipo="psicologo", conselho="CRP", numero=registro or str(next(_registros)), uf="SP"
             )
         if com_2fa:
             import pyotp
@@ -45,3 +48,37 @@ def criar_usuario(db):
         return usuario
 
     return _criar
+
+
+@pytest.fixture
+def fazer_request(rf):
+    """Request minimo para chamar servicos (a auditoria usa user, consultorio, META)."""
+
+    def _fazer(usuario, consultorio):
+        request = rf.get("/")
+        request.user = usuario
+        request.consultorio = consultorio
+        request.vinculo = None
+        return request
+
+    return _fazer
+
+
+@pytest.fixture
+def criar_paciente(db):
+    def _criar(consultorio, nome="Maria da Silva", **extra):
+        from apps.pacientes.models import Paciente
+
+        with contexto(consultorio_id=consultorio.pk):
+            return Paciente.objects.create(consultorio=consultorio, nome=nome, **extra)
+
+    return _criar
+
+
+def entrar_com_2fa(client, usuario):
+    """Login completo (senha + codigo TOTP) para usuarios com 2FA ativo."""
+    import pyotp
+    from django.urls import reverse
+
+    client.post(reverse("contas:entrar"), {"email": usuario.email, "senha": SENHA})
+    client.post(reverse("contas:verificar_2fa"), {"codigo": pyotp.TOTP(usuario.segredo_teste).now()})

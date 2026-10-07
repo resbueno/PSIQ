@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block titulo %}Pacientes · PSIQ{% endblock %}
+{% block conteudo %}
+<h1>Pacientes</h1>
+{% if acima_do_limite %}<div class="aviso-leitura">O consultório tem {{ ativos }} pacientes ativos e o plano {{ plano.nome }} inclui {{ plano.limite_pacientes_ativos }}. Você pode continuar cadastrando; considere mudar de plano.</div>{% endif %}
+<form method="get" class="busca">
+  <input type="text" name="q" value="{{ q }}" placeholder="Nome, CPF ou telefone" aria-label="Buscar paciente">
+  <input type="text" name="sem_consulta_ha" value="{{ sem_consulta_ha }}" placeholder="Sem consulta há (dias)" aria-label="Sem consulta há quantos dias" inputmode="numeric">
+  <button class="botao" type="submit">Buscar</button>
+  <a class="botao secundario" href="{% url 'pacientes:novo' %}">Novo paciente</a>
+</form>
+<div class="tabela-rolagem">
+<table>
+  <thead><tr><th>Nome</th><th>Contato</th><th>Último atendimento</th><th></th></tr></thead>
+  <tbody>
+  {% for p in pacientes %}
+    <tr>
+      <td><a href="{% url 'pacientes:detalhe' p.pk %}">{{ p.nome }}</a>{% if not p.ativo %} <span class="etiqueta">Inativo</span>{% endif %}</td>
+      <td>{{ p.telefone|default:"—" }}</td>
+      <td>{{ p.ultimo_atendimento_em|date:"d/m/Y"|default:"—" }}</td>
+      <td><a href="{% url 'agenda:nova_consulta' %}?paciente={{ p.pk }}">Agendar</a></td>
+    </tr>
+  {% empty %}
+    <tr><td colspan="4">Nenhum paciente encontrado. <a href="{% url 'pacientes:novo' %}">Cadastre o primeiro.</a></td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}

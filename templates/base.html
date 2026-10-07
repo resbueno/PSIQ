@@ -16,6 +16,12 @@
     </div>
     <nav aria-label="Principal">
       <a href="{% url 'painel' %}">Painel</a>
+      {% if perfil_ativo %}
+        <a href="{% url 'agenda:semana' %}">Agenda</a>
+        <a href="{% url 'agenda:solicitacoes' %}">Solicitações</a>
+        <a href="{% url 'pacientes:lista' %}">Pacientes</a>
+        <a href="{% url 'pacientes:grupos' %}">Casais e grupos</a>
+      {% endif %}
       {% if perfil_ativo == 'admin' %}
         <a href="{% url 'contas:usuarios' %}">Usuários</a>
         <a href="{% url 'contas:auditoria' %}">Auditoria</a>

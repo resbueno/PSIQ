@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block titulo %}Agenda · PSIQ{% endblock %}
+{% block conteudo %}
+<h1>Agenda</h1>
+<form method="get" class="busca">
+  {% if pode_escolher %}
+    <label for="prof" class="sr">Profissional</label>
+    <select name="profissional" id="prof" onchange="this.form.submit()">
+      {% for p in profissionais %}<option value="{{ p.pk }}" {% if p.pk == escolhido.pk %}selected{% endif %}>{{ p.usuario.nome }}</option>{% endfor %}
+    </select>
+  {% endif %}
+  <input type="hidden" name="data" value="{{ segunda|date:'Y-m-d' }}">
+  <noscript><button class="botao" type="submit">Ver</button></noscript>
+  <a class="botao secundario" href="?data={{ anterior|date:'Y-m-d' }}{% if pode_escolher and escolhido %}&profissional={{ escolhido.pk }}{% endif %}">Semana anterior</a>
+  <a class="botao secundario" href="?data={{ proxima|date:'Y-m-d' }}{% if pode_escolher and escolhido %}&profissional={{ escolhido.pk }}{% endif %}">Próxima semana</a>
+  <a class="botao" href="{% url 'agenda:nova_consulta' %}">Nova consulta</a>
+</form>
+{% if not escolhido %}<p>Nenhum profissional ativo neste consultório. Adicione um em Usuários.</p>{% endif %}
+<div class="semana">
+{% for d in dias %}
+  <section class="dia{% if d.hoje %} hoje{% endif %}" aria-label="{{ d.nome }} {{ d.data|date:'d/m' }}">
+    <h2>{{ d.nome|capfirst }} <span class="ajuda">{{ d.data|date:"d/m" }}</span></h2>
+    {% for c in d.consultas %}
+      <a class="compromisso status-{{ c.status }}" href="{% url 'agenda:consulta' c.pk %}">
+        <strong>{{ c.inicio|date:"H:i" }}</strong> {% if c.paciente %}{{ c.paciente.nome }}{% else %}{{ c.grupo.nome }}{% endif %}
+        <span class="ajuda">{{ c.get_status_display }}</span>
+      </a>
+    {% empty %}<p class="ajuda">Livre</p>{% endfor %}
+  </section>
+{% endfor %}
+</div>
+{% endblock %}

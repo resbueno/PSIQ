@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block titulo %}Nova consulta · PSIQ{% endblock %}
+{% block conteudo %}
+<h1>Nova consulta</h1>
+<form method="post" class="campos" novalidate>{% csrf_token %}
+  {% include "_campos.html" %}
+  <div><button class="botao" type="submit">Agendar</button> <a class="botao secundario" href="{% url 'agenda:semana' %}">Cancelar</a></div>
+</form>
+{% endblock %}

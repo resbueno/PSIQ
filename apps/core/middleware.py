@@ -1,4 +1,5 @@
 import logging
+from zoneinfo import ZoneInfo
 
 from django.contrib import messages
 from django.contrib.auth import logout
@@ -40,6 +41,7 @@ class ContextoConsultorioMiddleware:
     def __call__(self, request):
         request.consultorio = None
         request.vinculo = None
+        timezone.deactivate()
         try:
             usuario = request.user
             if usuario.is_authenticated:
@@ -54,12 +56,14 @@ class ContextoConsultorioMiddleware:
                     if vinculo and vinculo.consultorio.status != Consultorio.Status.ENCERRADO:
                         request.vinculo = vinculo
                         request.consultorio = vinculo.consultorio
+                        timezone.activate(ZoneInfo(vinculo.consultorio.fuso))
                         definir_contexto(consultorio_id=consultorio_id, usuario_id=usuario.pk)
                         self._marcar_uso(request)
                     else:
                         request.session.pop("consultorio_id", None)
             return self.get_response(request)
         finally:
+            timezone.deactivate()
             try:
                 limpar_contexto()
             except Exception:  # conexao ja invalida: o proximo uso abre outra, sem contexto

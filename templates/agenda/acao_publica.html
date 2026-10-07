@@ -1,0 +1,14 @@
+{% extends "entrada_base.html" %}
+{% block titulo %}Seu compromisso · PSIQ{% endblock %}
+{% block formulario %}
+<h1>Seu compromisso</h1>
+{% if resultado %}<ul class="mensagens"><li>{{ resultado }}</li></ul>{% endif %}
+<p>{{ quando|date:"d/m/Y" }} às {{ quando|date:"H:i" }}<br><span class="ajuda">{{ consulta.consultorio.nome }}</span></p>
+{% if cancelada %}<p>Este compromisso foi cancelado.</p>
+{% elif pode_agir %}
+  <form method="post" class="campos">{% csrf_token %}
+    <div>{% if not ja_confirmada %}<button class="botao" name="acao" value="confirmar" type="submit">Confirmar presença</button>{% else %}<span class="etiqueta ok">Presença confirmada</span>{% endif %}</div>
+    <div><button class="botao secundario" name="acao" value="cancelar" type="submit">Cancelar compromisso</button></div>
+  </form>
+{% else %}<p>Este compromisso não pode mais ser alterado por aqui. Em caso de dúvida, fale com o consultório.</p>{% endif %}
+{% endblock %}

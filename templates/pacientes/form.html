@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block titulo %}{{ titulo }} · PSIQ{% endblock %}
+{% block conteudo %}
+<h1>{{ titulo }}</h1>
+<form method="post" class="campos" novalidate>{% csrf_token %}
+  {% include "_campos.html" %}
+  {% if form.duplicado %}<p class="ajuda"><a href="{% url 'pacientes:detalhe' form.duplicado.pk %}">Abrir o cadastro existente</a> e, se for a mesma pessoa, use “Mesclar cadastros”.</p>{% endif %}
+  <div><button class="botao" type="submit">Salvar</button>
+  {% if paciente %}<a class="botao secundario" href="{% url 'pacientes:detalhe' paciente.pk %}">Cancelar</a>{% else %}<a class="botao secundario" href="{% url 'pacientes:lista' %}">Cancelar</a>{% endif %}</div>
+</form>
+{% endblock %}

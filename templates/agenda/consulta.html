@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block titulo %}Consulta · PSIQ{% endblock %}
+{% block conteudo %}
+<h1>{{ consulta.inicio|date:"d/m/Y H:i" }}</h1>
+<dl class="dados">
+  <dt>Paciente</dt><dd>{% if consulta.paciente %}<a href="{% url 'pacientes:detalhe' consulta.paciente_id %}">{{ consulta.paciente.nome }}</a>{% else %}{{ consulta.grupo.nome }} ({{ consulta.grupo.get_tipo_display }}){% endif %}</dd>
+  <dt>Profissional</dt><dd>{{ consulta.profissional.usuario.nome }}</dd>
+  <dt>Situação</dt><dd><span class="etiqueta">{{ consulta.get_status_display }}</span>{% if consulta.primeira_consulta %} <span class="etiqueta">Primeira consulta</span>{% endif %}{% if consulta.falta_tardia %} <span class="etiqueta pendente">Cancelamento tardio</span>{% endif %}</dd>
+  <dt>Atendimento</dt><dd>{{ consulta.get_tipo_display }}{% if consulta.link_online %} · <a href="{{ consulta.link_online }}" rel="noopener" target="_blank">Abrir sala</a>{% endif %}</dd>
+  {% if consulta.serie_id %}<dt>Série</dt><dd>Faz parte de uma série recorrente</dd>{% endif %}
+</dl>
+{% if consulta.ativa %}
+<div class="acoes">
+  {% if consulta.status == 'agendada' %}<form method="post">{% csrf_token %}<input type="hidden" name="acao" value="confirmar"><button class="botao" type="submit">Confirmar</button></form>{% endif %}
+  <form method="post">{% csrf_token %}<input type="hidden" name="acao" value="realizada"><button class="botao secundario" type="submit">Marcar como realizada</button></form>
+  <form method="post">{% csrf_token %}<input type="hidden" name="acao" value="faltou"><button class="botao secundario" type="submit">Registrar falta</button></form>
+</div>
+<h2>Remarcar</h2>
+<form method="post" class="campos" novalidate>{% csrf_token %}<input type="hidden" name="acao" value="remarcar">
+  {% include "_campos.html" with form=form_remarcar %}
+  <div><button class="botao secundario" type="submit">Remarcar</button></div>
+</form>
+<h2>Cancelar</h2>
+<form method="post" class="campos">{% csrf_token %}<input type="hidden" name="acao" value="cancelar">
+  <label><input type="checkbox" name="tardia"> Paciente avisou fora do prazo mínimo (cancelamento tardio)</label>
+  <div><button class="botao perigo" type="submit">Cancelar consulta</button></div>
+</form>
+{% endif %}
+<h2>Avisos enviados</h2>
+<ul class="lista-simples">
+{% for a in avisos %}<li><span>{{ a.get_tipo_display }} · {{ a.destinatario }}</span><span class="etiqueta {% if a.status == 'enviado' %}ok{% elif a.status == 'falhou' %}pendente{% endif %}">{{ a.get_status_display }}</span></li>{% empty %}<li>Nenhum aviso enviado.</li>{% endfor %}
+</ul>
+{% endblock %}

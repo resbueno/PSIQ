@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block titulo %}Mesclar cadastros · PSIQ{% endblock %}
+{% block conteudo %}
+<h1>Mesclar cadastros</h1>
+<p>Escolha o cadastro duplicado de <strong>{{ paciente.nome }}</strong>. Consultas, responsáveis e vínculos passam para {{ paciente.nome }}; o duplicado fica arquivado, nada é apagado, e a operação é registrada na auditoria.</p>
+<form method="post" class="campos" novalidate>{% csrf_token %}
+  {% include "_campos.html" %}
+  <div><button class="botao" type="submit">Mesclar</button> <a class="botao secundario" href="{% url 'pacientes:detalhe' paciente.pk %}">Cancelar</a></div>
+</form>
+{% endblock %}

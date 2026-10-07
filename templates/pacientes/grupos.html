@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block titulo %}Grupos de atendimento · PSIQ{% endblock %}
+{% block conteudo %}
+<h1>Casais, famílias e grupos</h1>
+<p><a class="botao" href="{% url 'pacientes:grupo_novo' %}">Novo atendimento em grupo</a></p>
+<ul class="lista-simples">
+{% for g in grupos %}<li><span>{{ g.nome }} <span class="etiqueta">{{ g.get_tipo_display }}</span></span><span class="ajuda">{{ g.participantes.count }} participantes</span></li>
+{% empty %}<li>Nenhum grupo cadastrado.</li>{% endfor %}
+</ul>
+{% endblock %}

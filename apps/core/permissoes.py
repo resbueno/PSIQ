@@ -5,6 +5,11 @@ from django.core.exceptions import PermissionDenied
 from django.shortcuts import redirect
 
 
+from apps.contas.models import Perfil
+
+PERFIS_INTERNOS = (Perfil.PROFISSIONAL, Perfil.ASSISTENTE, Perfil.ADMIN)
+
+
 def perfil_requerido(*perfis):
     """Camada 1 da autorizacao: o perfil do vinculo ativo precisa estar na lista."""
 

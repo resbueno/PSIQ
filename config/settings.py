@@ -127,3 +127,14 @@ PSIQ_CHAVE_MESTRA = env("PSIQ_CHAVE_MESTRA", default="")
 PSIQ_LOGIN_FALHAS_ANTES_DO_BLOQUEIO = 5
 PSIQ_LOGIN_BLOQUEIO_MAXIMO_MINUTOS = 60
 PSIQ_NOME_EMISSOR_2FA = "PSIQ"
+
+# Avisos e links
+PSIQ_URL_BASE = env("PSIQ_URL_BASE", default="http://localhost:8000")
+PSIQ_JITSI_URL = env("PSIQ_JITSI_URL", default="https://meet.jit.si")
+EMAIL_BACKEND = env("EMAIL_BACKEND", default="django.core.mail.backends.console.EmailBackend")
+EMAIL_HOST = env("EMAIL_HOST", default="localhost")
+EMAIL_PORT = env.int("EMAIL_PORT", default=25)
+EMAIL_HOST_USER = env("EMAIL_HOST_USER", default="")
+EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD", default="")
+EMAIL_USE_TLS = env.bool("EMAIL_USE_TLS", default=False)
+DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", default="PSIQ <nao-responder@localhost>")

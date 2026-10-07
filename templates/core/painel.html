@@ -2,7 +2,17 @@
 {% block titulo %}Painel · PSIQ{% endblock %}
 {% block conteudo %}
 <h1>Olá, {{ user.nome }}</h1>
-<p>Agenda, pacientes, prontuário e financeiro chegam nas próximas etapas. Por enquanto, o consultório já conta com acesso seguro, perfis e auditoria.</p>
+
+<h2>Hoje</h2>
+{% for c in consultas_hoje %}
+  <p><a href="{% url 'agenda:consulta' c.pk %}"><strong>{{ c.inicio|date:"H:i" }}</strong></a> {% if c.paciente %}{{ c.paciente.nome }}{% else %}{{ c.grupo.nome }}{% endif %}
+  {% if perfil_ativo != 'profissional' %}<span class="ajuda">com {{ c.profissional.usuario.nome }}</span>{% endif %}
+  <span class="etiqueta">{{ c.get_status_display }}</span></p>
+{% empty %}<p class="ajuda">Nenhuma consulta agendada para hoje. <a href="{% url 'agenda:nova_consulta' %}">Agendar uma consulta</a></p>{% endfor %}
+
+{% if solicitacoes_pendentes %}<p><a href="{% url 'agenda:solicitacoes' %}">{{ solicitacoes_pendentes }} solicitaç{{ solicitacoes_pendentes|pluralize:"ão,ões" }} de horário aguardando decisão</a></p>{% endif %}
+{% if sem_consulta %}<p><a href="{% url 'pacientes:lista' %}?sem_consulta_ha={{ dias_sem_consulta }}">{{ sem_consulta }} paciente{{ sem_consulta|pluralize }} sem consulta há mais de {{ dias_sem_consulta }} dias</a></p>{% endif %}
+
 {% if perfil_ativo == 'admin' %}
   <h2>Resumo do consultório</h2>
   <p>{{ usuarios_ativos }} usuário{{ usuarios_ativos|pluralize }} com acesso ativo.</p>

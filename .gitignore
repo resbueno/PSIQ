@@ -14,3 +14,6 @@ htmlcov/
 
 # Especificação interna (não publicar)
 docs/
+
+# GitHub Actions (workflows)
+.github/workflows/

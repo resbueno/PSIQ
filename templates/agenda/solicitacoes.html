@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block titulo %}Solicitações · PSIQ{% endblock %}
+{% block conteudo %}
+<h1>Solicitações de horário</h1>
+<p><a class="botao" href="{% url 'agenda:nova_solicitacao' %}">Registrar solicitação</a></p>
+<h2>Aguardando decisão</h2>
+<div class="tabela-rolagem"><table>
+  <thead><tr><th>Paciente</th><th>Profissional</th><th>Horário desejado</th><th></th></tr></thead>
+  <tbody>
+  {% for s in pendentes %}
+    <tr><td><a href="{% url 'pacientes:detalhe' s.paciente_id %}">{{ s.paciente.nome }}</a>{% if s.observacao %}<div class="ajuda">{{ s.observacao }}</div>{% endif %}</td>
+      <td>{{ s.profissional.usuario.nome }}</td><td>{{ s.horario_desejado|date:"d/m/Y H:i" }}</td>
+      <td>
+        <form method="post" action="{% url 'agenda:decidir_solicitacao' s.pk %}" style="display:inline">{% csrf_token %}<input type="hidden" name="decisao" value="aprovar"><button class="botao" type="submit">Aprovar</button></form>
+        <form method="post" action="{% url 'agenda:decidir_solicitacao' s.pk %}" style="display:inline">{% csrf_token %}<input type="hidden" name="decisao" value="recusar"><button class="botao secundario" type="submit">Recusar</button></form>
+      </td></tr>
+  {% empty %}<tr><td colspan="4">Nenhuma solicitação pendente.</td></tr>{% endfor %}
+  </tbody></table></div>
+<h2>Decididas recentemente</h2>
+<ul class="lista-simples">
+{% for s in decididas %}<li><span>{{ s.paciente.nome }} · {{ s.horario_desejado|date:"d/m/Y H:i" }}</span><span class="etiqueta">{{ s.get_status_display }}</span></li>{% empty %}<li>Nada por aqui ainda.</li>{% endfor %}
+</ul>
+{% endblock %}
