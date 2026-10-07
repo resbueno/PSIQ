@@ -17,6 +17,8 @@ class _CpfTelefoneMixin:
 
 
 class PacienteForm(_CpfTelefoneMixin, forms.ModelForm):
+    cpf = forms.CharField(label="CPF", max_length=14, required=False, help_text="Pode ficar vazio (ex.: criança).")
+
     class Meta:
         model = Paciente
         fields = ["nome", "cpf", "nascimento", "email", "telefone", "convenio", "carteirinha", "exige_aprovacao", "ativo"]
@@ -42,12 +44,16 @@ class PacienteForm(_CpfTelefoneMixin, forms.ModelForm):
 
 
 class ResponsavelForm(_CpfTelefoneMixin, forms.ModelForm):
+    cpf = forms.CharField(label="CPF", max_length=14, required=False)
+
     class Meta:
         model = ResponsavelLegal
         fields = ["nome", "cpf", "telefone", "email", "recebe_avisos", "pode_pagar"]
 
 
 class PagadorForm(forms.ModelForm):
+    cpf = forms.CharField(label="CPF", max_length=14)
+
     class Meta:
         model = Pagador
         fields = ["nome", "cpf"]
