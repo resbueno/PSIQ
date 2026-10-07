@@ -24,6 +24,7 @@
         <a href="{% url 'agenda:semana' %}">Agenda</a>
         <a href="{% url 'agenda:solicitacoes' %}">Solicitações</a>
         <a href="{% url 'pacientes:lista' %}">Pacientes</a>
+        <a href="{% url 'importacao:inicio' %}">Importar pacientes</a>
         <a href="{% url 'pacientes:grupos' %}">Casais e grupos</a>
         <a href="{% url 'prontuario:lista' %}">Prontuários</a>
         {% if perfil_ativo == 'profissional' %}<a href="{% url 'calendarios:lista' %}">Calendários</a>{% endif %}

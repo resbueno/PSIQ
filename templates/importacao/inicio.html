@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block titulo %}Importar pacientes · PSIQ{% endblock %}
+{% block conteudo %}
+<h1>Importar pacientes</h1>
+<p>Envie uma planilha com os pacientes que você já tem. Antes de cadastrar, mostramos uma prévia com os erros e os cadastros que já existem. Nada é salvo até você confirmar.</p>
+<p><a href="{% url 'importacao:modelo' %}">Baixar o modelo de planilha</a>. Colunas: nome (obrigatório), cpf, nascimento, email, telefone, convenio, carteirinha.</p>
+<form method="post" enctype="multipart/form-data" class="campos" novalidate>{% csrf_token %}
+  {% include "_campos.html" %}
+  <div><button class="botao" type="submit">Enviar e ver a prévia</button></div>
+</form>
+<p class="ajuda">Prontuários antigos não entram aqui: anexe os arquivos no prontuário do paciente, marcando “prontuário antigo”.</p>
+{% if recentes %}
+<h2>Importações recentes</h2>
+<ul class="lista-simples">{% for l in recentes %}<li><span>{{ l.nome_arquivo }} <span class="etiqueta">{{ l.get_status_display }}</span></span><span class="ajuda">{{ l.criado_em|date:"d/m/Y H:i" }}{% if l.status == 'concluida' %} · {{ l.importadas }} importados{% endif %}</span></li>{% endfor %}</ul>
+{% endif %}
+{% endblock %}

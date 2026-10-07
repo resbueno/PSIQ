@@ -30,6 +30,7 @@ INSTALLED_APPS = [
     "apps.calendarios",
     "apps.operador",
     "apps.relatorios",
+    "apps.importacao",
 ]
 
 MIDDLEWARE = [
@@ -174,3 +175,7 @@ PSIQ_CALENDARIO_JANELA_DIAS = 60
 
 # Inadimplencia: aviso, carencia de 15 dias, depois somente leitura (exportacao sempre liberada)
 PSIQ_CARENCIA_DIAS = 15
+
+# Importacao de pacientes por planilha
+PSIQ_IMPORTACAO_MAX_BYTES = 5 * 1024 * 1024
+PSIQ_IMPORTACAO_MAX_LINHAS = 5000

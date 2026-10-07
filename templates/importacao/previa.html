@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block titulo %}Prévia da importação · PSIQ{% endblock %}
+{% block conteudo %}
+<h1>Prévia da importação</h1>
+<p>{{ lote.nome_arquivo }}: {{ lote.total }} linha(s). <strong>{{ lote.validas }}</strong> prontas para importar, <strong>{{ lote.duplicadas }}</strong> duplicadas (serão ignoradas), <strong>{{ lote.com_erro }}</strong> com erro (serão ignoradas).</p>
+{% if lote.status == 'previa' %}
+<div class="acoes">
+  {% if lote.validas %}<form method="post" action="{% url 'importacao:confirmar' lote.pk %}">{% csrf_token %}<button class="botao" type="submit">Importar {{ lote.validas }} paciente(s)</button></form>{% endif %}
+  <form method="post" action="{% url 'importacao:cancelar' lote.pk %}">{% csrf_token %}<button class="botao secundario" type="submit">Cancelar</button></form>
+</div>
+{% else %}<p><span class="etiqueta">{{ lote.get_status_display }}</span>{% if lote.status == 'concluida' %} {{ lote.importadas }} importados.{% endif %}</p>{% endif %}
+<div class="tabela-rolagem"><table>
+  <thead><tr><th>Linha</th><th>Nome</th><th>CPF</th><th>Situação</th><th>Observações</th></tr></thead>
+  <tbody>
+  {% for l in lote.linhas %}
+    <tr><td>{{ l.linha }}</td><td>{{ l.dados.nome|default:"—" }}</td><td>{{ l.dados.cpf|default:"—" }}</td>
+      <td><span class="etiqueta {% if l.status == 'ok' %}ok{% else %}pendente{% endif %}">{% if l.status == 'ok' %}Pronta{% elif l.status == 'duplicado' %}Duplicada{% else %}Erro{% endif %}</span></td>
+      <td>{% for m in l.mensagens %}{{ m }} {% endfor %}{% for a in l.avisos %}<span class="ajuda">{{ a }}</span> {% endfor %}</td></tr>
+  {% endfor %}
+  </tbody></table></div>
+{% endblock %}
