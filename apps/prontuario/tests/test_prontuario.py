@@ -231,6 +231,7 @@ def test_liberar_a_outro_profissional_exige_aceite_do_paciente(client, cena):
     assert not LiberacaoLeitura.objects.filter(usuario=cena.dr, revogado_em__isnull=True).exists()
     login(client, cena.dr, cena)
     assert client.get(reverse("prontuario:detalhe", args=[cena.prontuario.pk])).status_code == 404
+    definir_contexto(consultorio_id=cena.consultorio.pk)
     acoes = set(Auditoria.objects.values_list("acao", flat=True))
     assert {"consentimento_aceito", "consentimento_revogado"} <= acoes
 
@@ -307,6 +308,7 @@ def test_documento_clinico_e_cifrado_e_so_quem_le_o_prontuario_baixa(client, cen
     url = reverse("prontuario:documento_baixar", args=[documento.pk])
     login(client, cena.assistente, cena)
     assert client.get(url).status_code == 404
+    definir_contexto(consultorio_id=cena.consultorio.pk)
     servico.conceder_liberacao(cena.req(cena.dra), cena.prontuario, cena.assistente)
     assert client.get(url).content.startswith(b"%PDF")
 
@@ -403,6 +405,7 @@ def test_delegacao_troca_o_dono_sem_o_admin_ler_o_conteudo(client, cena):
 def test_delegacao_so_pelo_admin_e_recusa_destino_com_prontuario(client, cena):
     login(client, cena.dra, cena)
     assert client.get(reverse("prontuario:delegar")).status_code == 403
+    definir_contexto(consultorio_id=cena.consultorio.pk)
     servico.abrir_prontuario(cena.req(cena.dr), cena.dr.profissional, paciente=cena.paciente)
     with pytest.raises(ErroProntuario, match="já tem um prontuário"):
         servico.delegar(cena.req(cena.admin), cena.prontuario, cena.dr.profissional)
