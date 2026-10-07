@@ -5,8 +5,9 @@ ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
 WORKDIR /app
 
 RUN useradd --create-home --uid 10001 psiq
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+ARG INSTALAR_DEV=0
+COPY requirements.txt requirements-dev.txt .
+RUN pip install --no-cache-dir -r requirements.txt && if [ "$INSTALAR_DEV" = "1" ]; then pip install --no-cache-dir -r requirements-dev.txt; fi
 
 COPY . .
 RUN DJANGO_SECRET_KEY=build DJANGO_DEBUG=false python manage.py collectstatic --noinput

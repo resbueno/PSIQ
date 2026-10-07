@@ -1,0 +1,62 @@
+# Homologacao em VPS compartilhada: sem portas publicas (so 127.0.0.1:8088), rede e banco proprios.
+# Uso (em /psiq): docker compose -p psiq -f app/deploy/docker-compose.homolog.yml --env-file .env up -d --build
+#   testes:        docker compose -p psiq -f app/deploy/docker-compose.homolog.yml --env-file .env run --rm testes
+# Acesso manual por tunel:  ssh -L 8088:127.0.0.1:8088 <vps>  e abra http://localhost:8088
+name: psiq
+
+services:
+  db:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - dados-pg:/var/lib/postgresql/data
+      - /psiq/initdb:/docker-entrypoint-initdb.d:ro
+    networks: [interna]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      retries: 20
+
+  app:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    restart: unless-stopped
+    env_file: ../../.env
+    environment:
+      DB_HOST: db
+      PSIQ_ANEXOS_DIR: /data/anexos
+    volumes:
+      - anexos:/data/anexos
+    ports:
+      - "127.0.0.1:8088:8000"
+    networks: [interna]
+    depends_on:
+      db:
+        condition: service_healthy
+
+  testes:
+    profiles: [testes]
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+      args:
+        INSTALAR_DEV: "1"
+    env_file: ../../.env
+    environment:
+      DB_HOST: db
+      DJANGO_DEBUG: "true"
+    networks: [interna]
+    depends_on:
+      db:
+        condition: service_healthy
+    command: ["python", "-m", "pytest", "-q", "-p", "no:cacheprovider"]
+
+networks:
+  interna:
+
+volumes:
+  dados-pg:
+  anexos:

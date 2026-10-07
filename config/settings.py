@@ -118,7 +118,8 @@ SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SAMESITE = "Lax"
 CSRF_COOKIE_SAMESITE = "Lax"
 
-if not DEBUG:
+# Em producao tudo e HTTPS. Homologacao sem terminador TLS define PSIQ_HTTPS=false.
+if not DEBUG and env.bool("PSIQ_HTTPS", default=True):
     SECURE_SSL_REDIRECT = True
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
