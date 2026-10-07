@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: ["**"]
   pull_request:
 
 jobs:
@@ -40,7 +40,7 @@ jobs:
             -c "CREATE ROLE psiq_app LOGIN PASSWORD 'psiq_dev' NOSUPERUSER NOBYPASSRLS CREATEDB;" \
             -c "CREATE DATABASE psiq OWNER psiq_app;"
       - name: Migrações em dia
-        run: python manage.py makemigrations --check --dry-run
+        run: python manage.py makemigrations --check --dry-run -v 3
         env:
           DB_NAME: psiq
       - name: Testes

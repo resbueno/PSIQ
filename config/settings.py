@@ -22,6 +22,8 @@ INSTALLED_APPS = [
     "apps.plataforma",
     "apps.contas",
     "apps.auditoria",
+    "apps.pacientes",
+    "apps.agenda",
 ]
 
 MIDDLEWARE = [
