@@ -101,12 +101,25 @@ def test_auditoria_aceita_evento_sem_consultorio():
     Auditoria.objects.create(consultorio_id=None, acao="login_falha")
 
 
-def test_auditoria_e_append_only(dois_consultorios):
+def test_auditoria_nao_pode_ser_alterada_nem_apagada(dois_consultorios):
+    """Sem politica de UPDATE/DELETE, o RLS filtra a linha: a operacao afeta 0 registros."""
     a, *_ = dois_consultorios
     with contexto(consultorio_id=a.pk):
         evento = Auditoria.objects.create(consultorio_id=a.pk, acao="x")
-        with pytest.raises(DatabaseError), transaction.atomic():
-            Auditoria.objects.filter(pk=evento.pk).update(acao="adulterado")
-        with pytest.raises(DatabaseError), transaction.atomic():
-            Auditoria.objects.filter(pk=evento.pk).delete()
+        assert Auditoria.objects.filter(pk=evento.pk).update(acao="adulterado") == 0
+        assert Auditoria.objects.filter(pk=evento.pk).delete()[0] == 0
         assert Auditoria.objects.get(pk=evento.pk).acao == "x"
+
+
+def test_trigger_bloqueia_alteracao_mesmo_sem_rls(dois_consultorios):
+    """Segunda camada: se o RLS fosse desligado (dono da tabela), o trigger ainda barra UPDATE e DELETE."""
+    a, *_ = dois_consultorios
+    with contexto(consultorio_id=a.pk):
+        evento = Auditoria.objects.create(consultorio_id=a.pk, acao="x")
+    with connection.cursor() as cur:  # DDL e transacional no PostgreSQL: o teste desfaz tudo ao fim
+        cur.execute("ALTER TABLE auditoria_auditoria NO FORCE ROW LEVEL SECURITY")
+        cur.execute("ALTER TABLE auditoria_auditoria DISABLE ROW LEVEL SECURITY")
+    with pytest.raises(DatabaseError), transaction.atomic():
+        Auditoria.objects.filter(pk=evento.pk).update(acao="adulterado")
+    with pytest.raises(DatabaseError), transaction.atomic():
+        Auditoria.objects.filter(pk=evento.pk).delete()
