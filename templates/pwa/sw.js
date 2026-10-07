@@ -9,7 +9,7 @@ self.addEventListener('push', function (event) {
   event.waitUntil(self.registration.showNotification(dados.title || 'Aviso', {
     body: dados.body || '',
     icon: '{% load static %}{% static "pwa/icone.svg" %}',
-    data: { url: dados.url || '/portal/' }
+    data: { url: dados.url || self.registration.scope }
   }));
 });
 

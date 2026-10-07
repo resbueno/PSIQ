@@ -111,7 +111,7 @@ class SegundoFatorObrigatorioMiddleware:
             if usuario.segundo_fator_ativo and not request.session.get("segundo_fator_ok"):
                 logout(request)
                 return redirect("contas:entrar")
-            if not usuario.segundo_fator_ativo and not request.path.startswith(self.LIVRES):
+            if not usuario.segundo_fator_ativo and not request.path_info.startswith(self.LIVRES):
                 exige = usuario.is_staff or Vinculo.objects.filter(
                     usuario=usuario, perfil=Perfil.PROFISSIONAL, ativo=True
                 ).exists()
@@ -132,15 +132,15 @@ class SomenteLeituraMiddleware:
 
     def __call__(self, request):
         consultorio = getattr(request, "consultorio", None)
-        if consultorio and consultorio.status == Consultorio.Status.ENCERRADO and not request.path.startswith(self.SO_EXPORTACAO):
+        if consultorio and consultorio.status == Consultorio.Status.ENCERRADO and not request.path_info.startswith(self.SO_EXPORTACAO):
             return redirect("relatorios:exportacao")
-        if getattr(request, "suporte", None) and request.method not in METODOS_SEGUROS and not request.path.startswith(self.LIVRES):
+        if getattr(request, "suporte", None) and request.method not in METODOS_SEGUROS and not request.path_info.startswith(self.LIVRES):
             return HttpResponseForbidden("O acesso de suporte é somente leitura.")
         if (
             consultorio
             and consultorio.somente_leitura
             and request.method not in METODOS_SEGUROS
-            and not request.path.startswith(self.LIVRES)
+            and not request.path_info.startswith(self.LIVRES)
         ):
             return HttpResponseForbidden(
                 "Este consultório está em modo somente leitura por pendência de pagamento. "
@@ -161,7 +161,7 @@ class InatividadeProntuarioMiddleware:
         if request.user.is_authenticated:
             agora = time.time()
             ultimo = request.session.get("ultima_atividade")
-            if request.path.startswith(self.AREA) and ultimo and agora - ultimo > settings.PSIQ_INATIVIDADE_PRONTUARIO_SEGUNDOS:
+            if request.path_info.startswith(self.AREA) and ultimo and agora - ultimo > settings.PSIQ_INATIVIDADE_PRONTUARIO_SEGUNDOS:
                 SessaoDispositivo.objects.filter(session_key=request.session.session_key).update(revogada_em=timezone.now())
                 logout(request)
                 messages.warning(request, "Sua sessão expirou por inatividade. Entre novamente para abrir prontuários.")
@@ -177,7 +177,7 @@ class SuporteAuditoriaMiddleware:
         self.get_response = get_response
 
     def __call__(self, request):
-        if getattr(request, "suporte", None) and not request.path.startswith("/static/"):
+        if getattr(request, "suporte", None) and not request.path_info.startswith("/static/"):
             from apps.auditoria import servico as auditoria
 
             auditoria.registrar(request, "suporte_requisicao", "suporte", request.suporte.pk, metodo=request.method, caminho=request.path[:150])

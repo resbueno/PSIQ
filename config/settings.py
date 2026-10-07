@@ -118,13 +118,26 @@ SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SAMESITE = "Lax"
 CSRF_COOKIE_SAMESITE = "Lax"
 
+# Instalacao sob um prefixo (ex.: https://host/psiq). O proxy remove o prefixo antes de chamar a aplicacao;
+# o Django passa a gerar todos os enderecos com ele. Cookies com nome e caminho proprios nao colidem com
+# outros sistemas no mesmo dominio.
+PSIQ_PREFIXO = env("PSIQ_PREFIXO", default="").rstrip("/")
+SESSION_COOKIE_NAME = "psiq_sessionid"
+CSRF_COOKIE_NAME = "psiq_csrftoken"
+if PSIQ_PREFIXO:
+    FORCE_SCRIPT_NAME = PSIQ_PREFIXO
+    SESSION_COOKIE_PATH = PSIQ_PREFIXO
+    CSRF_COOKIE_PATH = PSIQ_PREFIXO
+CSRF_TRUSTED_ORIGINS = env.list("PSIQ_ORIGENS_CONFIAVEIS", default=[])
+
 # Em producao tudo e HTTPS. Homologacao sem terminador TLS define PSIQ_HTTPS=false.
 if not DEBUG and env.bool("PSIQ_HTTPS", default=True):
     SECURE_SSL_REDIRECT = True
+    SECURE_REDIRECT_EXEMPT = [r"(^|/)saude/$"]  # o healthcheck do contêiner chama por HTTP, de dentro
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
-    SECURE_HSTS_SECONDS = 31536000
-    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_SECONDS = env.int("PSIQ_HSTS_SEGUNDOS", default=31536000)  # 0 quando o proxy ja define HSTS
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = env.bool("PSIQ_HSTS_SUBDOMINIOS", default=True) and SECURE_HSTS_SECONDS > 0
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 SECURE_CONTENT_TYPE_NOSNIFF = True
 X_FRAME_OPTIONS = "DENY"

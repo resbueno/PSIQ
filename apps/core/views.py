@@ -49,7 +49,7 @@ def painel(request):
 def service_worker(request):
     """Service worker na raiz (escopo '/'). Sem cache de dados; usado so para push."""
     resposta = render(request, "pwa/sw.js", content_type="application/javascript")
-    resposta["Service-Worker-Allowed"] = "/"
+    resposta["Service-Worker-Allowed"] = request.path[: -len("sw.js")]  # escopo = pasta do script ("/" ou "/psiq/")
     resposta["Cache-Control"] = "no-cache"
     return resposta
 

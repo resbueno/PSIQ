@@ -1,6 +1,9 @@
 (function () {
   if (!('serviceWorker' in navigator)) { return; }
-  navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch(function () {});
+  var meta = document.querySelector('meta[name="sw"]');
+  if (!meta) { return; }
+  // O endereco vem do servidor, que conhece o prefixo da instalacao (ex.: /psiq/).
+  navigator.serviceWorker.register(meta.content, { scope: meta.content.replace(/sw\.js$/, '') }).catch(function () {});
 
   var botao = document.getElementById('ativar-push');
   if (!botao || !('PushManager' in window)) { if (botao) { botao.hidden = true; } return; }

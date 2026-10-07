@@ -1,4 +1,5 @@
 import secrets
+from urllib.parse import urlparse
 
 from django.conf import settings
 from django.contrib import messages
@@ -20,7 +21,9 @@ SAL_STATE = "psiq.calendario"
 
 
 def _redirect_uri(provedor):
-    return settings.PSIQ_URL_BASE.rstrip("/") + reverse("calendarios:retorno", args=[provedor])
+    # reverse() ja inclui o prefixo da instalacao (ex.: /psiq), entao so a origem de PSIQ_URL_BASE entra aqui.
+    base = urlparse(settings.PSIQ_URL_BASE)
+    return f"{base.scheme}://{base.netloc}" + reverse("calendarios:retorno", args=[provedor])
 
 
 def _meu_perfil_profissional(request):

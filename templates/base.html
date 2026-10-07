@@ -5,7 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block titulo %}PSIQ{% endblock %}</title>
   <link rel="stylesheet" href="{% static 'css/psiq.css' %}">
-  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="manifest" href="{% url 'manifesto' %}">
+  <meta name="sw" content="{% url 'service_worker' %}">
   <meta name="theme-color" content="#16303a">
   <meta name="csrf" content="{{ csrf_token }}">
   <script src="{% static 'js/pwa.js' %}" defer></script>
