@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block titulo %}Compartilhar com outro profissional · PSIQ{% endblock %}
+{% block conteudo %}
+<h1>Compartilhar com outro profissional</h1>
+<p>O paciente recebe um e-mail com um link para ler e aceitar. Só depois do aceite você consegue liberar a leitura ao outro profissional. O paciente pode revogar pelo mesmo link.</p>
+<form method="post" class="campos" novalidate>{% csrf_token %}
+  {% include "_campos.html" %}
+  <div><button class="botao" type="submit">Enviar pedido ao paciente</button> <a class="botao secundario" href="{% url 'prontuario:detalhe' prontuario.pk %}">Voltar</a></div>
+</form>
+<h2>Pedidos</h2>
+<ul class="lista-simples">
+{% for c in historico %}<li><span>{{ c.paciente.nome }} → {{ c.profissional_destino.usuario.nome }}</span>
+  <span class="etiqueta {% if c.vigente %}ok{% elif c.revogado_em %}{% else %}pendente{% endif %}">{% if c.revogado_em %}Revogado{% elif c.aceito_em %}Aceito{% else %}Aguardando o paciente{% endif %}</span></li>
+{% empty %}<li>Nenhum pedido.</li>{% endfor %}
+</ul>
+{% endblock %}

@@ -118,3 +118,5 @@ th { font-weight: 600; color: var(--tinta-suave); font-size: .9rem; }
 .dados dd { margin: 0; }
 .acoes { display: flex; flex-wrap: wrap; gap: .5rem; margin-bottom: 1rem; }
 .acoes form { margin: 0; }
+.texto-clinico { background: var(--superficie); border: 1px solid var(--linha); padding: 1rem 1.25rem; max-width: 46rem; }
+textarea { width: 100%; padding: .65rem .75rem; border: 1px solid #9db0ae; border-radius: 4px; font: inherit; background: var(--superficie); color: inherit; }

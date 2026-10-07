@@ -1,0 +1,16 @@
+{% extends "entrada_base.html" %}
+{% block titulo %}Autorização · PSIQ{% endblock %}
+{% block formulario %}
+<h1>Autorização de acesso</h1>
+{% if resultado %}<ul class="mensagens"><li>{{ resultado }}</li></ul>{% endif %}
+<p>{{ c.consultorio.nome }}: {{ c.profissional_origem.usuario.nome }} pede sua autorização para que {{ c.profissional_destino.usuario.nome }} leia seu prontuário.</p>
+<p class="ajuda">{{ termo }}</p>
+{% if c.revogado_em %}
+  <p><span class="etiqueta">Autorização revogada em {{ c.revogado_em|date:"d/m/Y" }}</span></p>
+{% elif c.aceito_em %}
+  <p><span class="etiqueta ok">Autorizado em {{ c.aceito_em|date:"d/m/Y" }}</span></p>
+  <form method="post" class="campos">{% csrf_token %}<button class="botao perigo" name="acao" value="revogar" type="submit">Revogar autorização</button></form>
+{% else %}
+  <form method="post" class="campos">{% csrf_token %}<button class="botao" name="acao" value="aceitar" type="submit">Autorizo</button></form>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block titulo %}Emitir documento · PSIQ{% endblock %}
+{% block conteudo %}
+<h1>Emitir documento</h1>
+<form method="get" class="campos" novalidate>
+  {% include "_campos.html" with form=escolha %}
+  <div><button class="botao secundario" type="submit">Preencher com o modelo</button></div>
+</form>
+{% if preenchido or form.is_bound %}
+<h2>Revise e emita</h2>
+<form method="post" class="campos" novalidate>{% csrf_token %}
+  {% include "_campos.html" %}
+  <div><button class="botao" type="submit">Emitir PDF</button> <a class="botao secundario" href="{% url 'prontuario:detalhe' prontuario.pk %}">Cancelar</a></div>
+</form>
+{% endif %}
+{% endblock %}

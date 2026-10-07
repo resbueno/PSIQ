@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block titulo %}Prontuário · PSIQ{% endblock %}
+{% block conteudo %}
+<h1>Prontuário de {% if prontuario.paciente %}{{ prontuario.paciente.nome }}{% else %}{{ prontuario.grupo.nome }}{% endif %}</h1>
+<p class="ajuda">Dono: {{ prontuario.profissional.usuario.nome }} · guarda obrigatória até {{ prazo|date:"d/m/Y" }}{% if not eh_dono %} · você tem acesso somente leitura{% endif %}</p>
+{% if eh_dono %}
+<div class="acoes">
+  <a class="botao" href="{% url 'prontuario:registro_novo' prontuario.pk %}">Novo registro</a>
+  <a class="botao secundario" href="{% url 'prontuario:anexo_enviar' prontuario.pk %}">Enviar anexo</a>
+  {% if prontuario.paciente %}<a class="botao secundario" href="{% url 'prontuario:documento_novo' prontuario.pk %}">Emitir documento</a>{% endif %}
+  <a class="botao secundario" href="{% url 'prontuario:liberacoes' prontuario.pk %}">Quem pode ler</a>
+  <a class="botao secundario" href="{% url 'prontuario:consentimentos' prontuario.pk %}">Compartilhar com outro profissional</a>
+</div>
+{% endif %}
+
+<h2>Registros</h2>
+<ul class="lista-simples">
+{% for r in registros %}<li><a href="{% url 'prontuario:registro' prontuario.pk r.pk %}">{{ r.get_tipo_display }} de {{ r.criado_em|date:"d/m/Y H:i" }}</a><span class="ajuda">{{ r.versoes.all|length }} versão(ões)</span></li>
+{% empty %}<li>Nenhum registro ainda.</li>{% endfor %}
+</ul>
+
+<h2>Anexos</h2>
+<ul class="lista-simples">
+{% for a in anexos %}<li><a href="{% url 'prontuario:anexo_baixar' prontuario.pk a.pk %}">{{ a.nome }}</a><span class="ajuda">{{ a.tamanho|filesizeformat }}{% if a.importado_historico %} · histórico importado{% endif %}</span></li>
+{% empty %}<li>Nenhum anexo.</li>{% endfor %}
+</ul>
+
+<h2>Documentos emitidos</h2>
+<ul class="lista-simples">
+{% for d in documentos %}<li><a href="{% url 'prontuario:documento_baixar' d.pk %}">{{ d.titulo }}</a>
+  <span class="ajuda">{{ d.criado_em|date:"d/m/Y" }}{% if d.liberado_ao_paciente %} · liberado ao paciente{% endif %}</span>
+  {% if eh_dono %}<form method="post" action="{% url 'prontuario:documento_liberar' prontuario.pk d.pk %}">{% csrf_token %}<button class="botao secundario" type="submit">{% if d.liberado_ao_paciente %}Retirar do portal{% else %}Liberar ao paciente{% endif %}</button></form>{% endif %}</li>
+{% empty %}<li>Nenhum documento.</li>{% endfor %}
+</ul>
+
+{% if eh_dono %}<p><a href="{% url 'prontuario:excluir' prontuario.pk %}">Excluir prontuário (pedido do paciente)</a></p>{% endif %}
+{% endblock %}

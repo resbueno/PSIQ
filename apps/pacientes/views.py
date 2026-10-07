@@ -79,6 +79,8 @@ def detalhe(request, pk):
             "paciente": paciente,
             "responsaveis": paciente.responsaveis.all(),
             "pagador": getattr(paciente, "pagador", None),
+            "eh_profissional": servico.profissional_da_requisicao(request) is not None,
+            "documentos_comparecimento": paciente.documentos.filter(chave__isnull=True)[:10],
             "proximas": consultas.filter(inicio__gte=agora, status__in=Consulta.ATIVAS)[:10],
             "anteriores": consultas.filter(inicio__lt=agora).order_by("-inicio")[:10],
         },

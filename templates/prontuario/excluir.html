@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block titulo %}Excluir prontuário · PSIQ{% endblock %}
+{% block conteudo %}
+<h1>Excluir prontuário</h1>
+<div class="aviso-leitura">Esta ação apaga registros, versões, anexos e documentos e não pode ser desfeita. Use apenas a pedido do paciente. {% if prontuario.em_prazo_de_guarda %}O prontuário ainda está dentro do prazo de guarda ({{ prontuario.prazo_guarda_ate|date:"d/m/Y" }}); a exclusão antecipada fica registrada na auditoria.{% endif %}</div>
+<form method="post" class="campos" novalidate>{% csrf_token %}
+  {% include "_campos.html" %}
+  <div><button class="botao perigo" type="submit">Excluir definitivamente</button> <a class="botao secundario" href="{% url 'prontuario:detalhe' prontuario.pk %}">Cancelar</a></div>
+</form>
+{% endblock %}

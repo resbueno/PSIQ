@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block titulo %}Editar modelo · PSIQ{% endblock %}
+{% block conteudo %}
+<h1>Editar modelo</h1>
+<form method="post" class="campos" novalidate>{% csrf_token %}
+  {% include "_campos.html" %}
+  <div><button class="botao" type="submit">Salvar</button> <a class="botao secundario" href="{% url 'prontuario:modelos' %}">Cancelar</a></div>
+</form>
+{% endblock %}

@@ -47,3 +47,15 @@ def decifrar_com(chave_de_dados: str, token: bytes) -> bytes:
         return Fernet(chave_de_dados.encode()).decrypt(token)
     except InvalidToken as exc:
         raise ValueError("Conteúdo cifrado inválido ou chave de dados incorreta.") from exc
+
+
+def cifrar_bytes(dados: bytes) -> bytes:
+    """Cifra pela chave mestra (arquivos sem conteudo clinico, ex.: declaracao de comparecimento)."""
+    return _mestra().encrypt(dados)
+
+
+def decifrar_bytes(token: bytes) -> bytes:
+    try:
+        return _mestra().decrypt(token)
+    except InvalidToken as exc:
+        raise ValueError("Arquivo cifrado inválido ou chave mestra incorreta.") from exc

@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block titulo %}Quem pode ler · PSIQ{% endblock %}
+{% block conteudo %}
+<h1>Quem pode ler este prontuário</h1>
+<p>Por padrão, só você. Assistente e administrador só leem se você liberar. Outro profissional precisa, além disso, do aceite eletrônico do paciente. A leitura é sempre registrada e você pode revogar quando quiser.</p>
+<ul class="lista-simples">
+{% for l in liberacoes %}<li><span>{{ l.usuario.nome }} <span class="ajuda">desde {{ l.criado_em|date:"d/m/Y" }}</span></span>
+  <form method="post" action="{% url 'prontuario:liberacao_revogar' prontuario.pk l.pk %}">{% csrf_token %}<button class="botao secundario" type="submit">Revogar</button></form></li>
+{% empty %}<li>Ninguém além de você.</li>{% endfor %}
+</ul>
+<form method="post" class="campos" novalidate>{% csrf_token %}
+  {% include "_campos.html" %}
+  <div><button class="botao" type="submit">Liberar leitura</button> <a class="botao secundario" href="{% url 'prontuario:detalhe' prontuario.pk %}">Voltar</a></div>
+</form>
+{% endblock %}

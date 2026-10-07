@@ -82,3 +82,8 @@ def entrar_com_2fa(client, usuario):
 
     client.post(reverse("contas:entrar"), {"email": usuario.email, "senha": SENHA})
     client.post(reverse("contas:verificar_2fa"), {"codigo": pyotp.TOTP(usuario.segredo_teste).now()})
+
+
+@pytest.fixture(autouse=True)
+def armazenamento_temporario(settings, tmp_path):
+    settings.PSIQ_ANEXOS_DIR = str(tmp_path / "armazenamento")

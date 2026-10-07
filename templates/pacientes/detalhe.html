@@ -27,6 +27,13 @@
 <h2>Pagador do recibo</h2>
 <p>{% if pagador %}{{ pagador.nome }} (CPF {{ pagador.cpf }}){% else %}O próprio paciente.{% endif %} <a href="{% url 'pacientes:pagador' paciente.pk %}">{% if pagador %}Alterar{% else %}Definir outro pagador{% endif %}</a></p>
 
+{% if eh_profissional and not paciente.mesclado_em %}
+<form method="post" action="{% url 'prontuario:abrir' paciente.pk %}">{% csrf_token %}<button class="botao secundario" type="submit">Abrir prontuário</button></form>
+{% endif %}
+{% if documentos_comparecimento %}
+<h2>Declarações emitidas</h2>
+{% for d in documentos_comparecimento %}<p><a href="{% url 'prontuario:documento_baixar' d.pk %}">{{ d.titulo }}</a> <span class="ajuda">{{ d.criado_em|date:"d/m/Y" }}</span></p>{% endfor %}
+{% endif %}
 <h2>Próximas consultas</h2>
 {% for c in proximas %}<p><a href="{% url 'agenda:consulta' c.pk %}">{{ c.inicio|date:"d/m/Y H:i" }}</a> · {{ c.profissional.usuario.nome }} · {{ c.get_status_display }}</p>{% empty %}<p class="ajuda">Nenhuma consulta futura.</p>{% endfor %}
 <h2>Consultas anteriores</h2>

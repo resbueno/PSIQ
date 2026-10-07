@@ -21,10 +21,12 @@
         <a href="{% url 'agenda:solicitacoes' %}">Solicitações</a>
         <a href="{% url 'pacientes:lista' %}">Pacientes</a>
         <a href="{% url 'pacientes:grupos' %}">Casais e grupos</a>
+        <a href="{% url 'prontuario:lista' %}">Prontuários</a>
       {% endif %}
       {% if perfil_ativo == 'admin' %}
         <a href="{% url 'contas:usuarios' %}">Usuários</a>
         <a href="{% url 'contas:auditoria' %}">Auditoria</a>
+        <a href="{% url 'prontuario:delegar' %}">Delegar prontuários</a>
       {% endif %}
       <a href="{% url 'contas:dispositivos' %}">Dispositivos conectados</a>
       {% if user.is_authenticated %}<a href="{% url 'contas:escolher_consultorio' %}">Trocar de consultório</a>{% endif %}

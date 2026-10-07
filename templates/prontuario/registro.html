@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block titulo %}Registro · PSIQ{% endblock %}
+{% block conteudo %}
+<h1>{{ registro.get_tipo_display }} de {{ registro.criado_em|date:"d/m/Y" }}</h1>
+{% if versao_antiga %}<div class="aviso-leitura">Você está vendo a versão {{ versao.numero }}, que não é a atual. <a href="{% url 'prontuario:registro' prontuario.pk registro.pk %}">Ver a versão atual</a>.</div>{% endif %}
+<p class="ajuda">Versão {{ versao.numero }} · gravada em {{ versao.criado_em|date:"d/m/Y H:i" }}</p>
+<div class="texto-clinico">{{ conteudo|linebreaks }}</div>
+{% if cid %}<p><strong>CID:</strong> {{ cid }}</p>{% endif %}
+{% if eh_dono %}<p><a class="botao secundario" href="{% url 'prontuario:registro_editar' prontuario.pk registro.pk %}">Editar (cria nova versão)</a></p>{% endif %}
+<h2>Histórico de versões</h2>
+<ul class="lista-simples">
+{% for v in versoes %}<li><a href="{% url 'prontuario:registro_versao' prontuario.pk registro.pk v.numero %}">Versão {{ v.numero }}</a><span class="ajuda">{{ v.criado_em|date:"d/m/Y H:i" }}</span></li>{% endfor %}
+</ul>
+<p><a href="{% url 'prontuario:detalhe' prontuario.pk %}">Voltar ao prontuário</a></p>
+{% endblock %}

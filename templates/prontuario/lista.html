@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block titulo %}Prontuários · PSIQ{% endblock %}
+{% block conteudo %}
+<h1>Prontuários</h1>
+<h2>Os seus</h2>
+<ul class="lista-simples">
+{% for p in proprios %}<li><a href="{% url 'prontuario:detalhe' p.pk %}">{% if p.paciente %}{{ p.paciente.nome }}{% else %}{{ p.grupo.nome }}{% endif %}</a><span class="ajuda">{% if p.ultimo_registro_em %}último registro em {{ p.ultimo_registro_em|date:"d/m/Y" }}{% else %}sem registros{% endif %}</span></li>
+{% empty %}<li>Você ainda não abriu nenhum prontuário. Abra pela página do paciente.</li>{% endfor %}
+</ul>
+{% if liberados %}
+<h2>Liberados para você</h2>
+<ul class="lista-simples">
+{% for p in liberados %}<li><a href="{% url 'prontuario:detalhe' p.pk %}">{% if p.paciente %}{{ p.paciente.nome }}{% else %}{{ p.grupo.nome }}{% endif %}</a><span class="ajuda">de {{ p.profissional.usuario.nome }} · somente leitura</span></li>{% endfor %}
+</ul>
+{% endif %}
+<p><a href="{% url 'prontuario:modelos' %}">Modelos de documento</a></p>
+{% endblock %}

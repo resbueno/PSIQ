@@ -1,6 +1,8 @@
 import logging
+import time
 from zoneinfo import ZoneInfo
 
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import logout
 from django.http import HttpResponseForbidden
@@ -114,4 +116,25 @@ class SomenteLeituraMiddleware:
                 "Este consultório está em modo somente leitura por pendência de pagamento. "
                 "Você pode consultar e exportar os dados."
             )
+        return self.get_response(request)
+
+
+class InatividadeProntuarioMiddleware:
+    """Na area de prontuario a sessao expira por inatividade mais cedo (padrao 15 min) que no resto do sistema."""
+
+    AREA = "/prontuarios/"
+
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        if request.user.is_authenticated:
+            agora = time.time()
+            ultimo = request.session.get("ultima_atividade")
+            if request.path.startswith(self.AREA) and ultimo and agora - ultimo > settings.PSIQ_INATIVIDADE_PRONTUARIO_SEGUNDOS:
+                SessaoDispositivo.objects.filter(session_key=request.session.session_key).update(revogada_em=timezone.now())
+                logout(request)
+                messages.warning(request, "Sua sessão expirou por inatividade. Entre novamente para abrir prontuários.")
+                return redirect("contas:entrar")
+            request.session["ultima_atividade"] = agora
         return self.get_response(request)

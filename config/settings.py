@@ -39,6 +39,7 @@ MIDDLEWARE = [
     # Depois da autenticacao: define o consultorio da sessao no banco (RLS).
     "apps.core.middleware.ContextoConsultorioMiddleware",
     "apps.core.middleware.SegundoFatorObrigatorioMiddleware",
+    "apps.core.middleware.InatividadeProntuarioMiddleware",
     "apps.core.middleware.SomenteLeituraMiddleware",
 ]
 
