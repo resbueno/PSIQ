@@ -17,6 +17,20 @@ class CodigoAcesso(ModeloBase):
         indexes = [models.Index(fields=["email", "criado_em"], name="codigo_email_criado_idx")]
 
 
+class AssinaturaPush(ModeloBase):
+    """Aparelho do paciente inscrito em notificacoes push (Web Push). O endpoint e a chave de cada aparelho."""
+
+    consultorio = models.ForeignKey("plataforma.Consultorio", on_delete=models.PROTECT, related_name="+")
+    paciente = models.ForeignKey("pacientes.Paciente", on_delete=models.CASCADE, related_name="assinaturas_push")
+    endpoint = models.TextField()
+    p256dh = models.CharField(max_length=200)
+    auth = models.CharField(max_length=100)
+    ativa = models.BooleanField(default=True)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=["paciente", "endpoint"], name="assinatura_push_unica")]
+
+
 class SolicitacaoLGPD(ModeloBase):
     """Canal do titular: pedido de exclusao, copia ou correcao de dados. A equipe responde fora do sistema."""
 

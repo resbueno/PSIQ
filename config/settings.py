@@ -154,3 +154,8 @@ PSIQ_PORTAL_CODIGO_VALIDADE_MINUTOS = 10
 PSIQ_PORTAL_MAX_TENTATIVAS = 5
 PSIQ_PORTAL_MAX_CODIGOS_POR_HORA = 5
 PSIQ_PORTAL_IDADE_MINIMA_ACESSO_PROPRIO = 16
+
+# Notificacoes push (Web Push). Gere as chaves VAPID com: npx web-push generate-vapid-keys
+PSIQ_VAPID_PUBLIC_KEY = env("PSIQ_VAPID_PUBLIC_KEY", default="")
+PSIQ_VAPID_PRIVATE_KEY = env("PSIQ_VAPID_PRIVATE_KEY", default="")
+PSIQ_VAPID_SUBJECT = env("PSIQ_VAPID_SUBJECT", default="mailto:contato@localhost")

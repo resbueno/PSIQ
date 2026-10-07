@@ -23,26 +23,21 @@ VALIDADE_TOKEN_SEGUNDOS = 60 * 60 * 24 * 60
 class Canal:
     nome = ""
 
-    def disponivel(self, destinatario) -> bool:
+    def enderecos(self, destinatario) -> list:
+        """Um registro de aviso e enviado por endereco (ex.: um e-mail, ou cada aparelho inscrito em push)."""
         raise NotImplementedError
 
-    def endereco(self, destinatario) -> str:
-        raise NotImplementedError
-
-    def enviar(self, endereco: str, assunto: str, corpo: str) -> None:
+    def enviar(self, endereco: str, assunto: str, corpo: str, resumo: str, link: str) -> None:
         raise NotImplementedError
 
 
 class CanalEmail(Canal):
     nome = Aviso.Canal.EMAIL
 
-    def disponivel(self, destinatario):
-        return bool(destinatario["email"])
+    def enderecos(self, destinatario):
+        return [destinatario["email"]] if destinatario["email"] else []
 
-    def endereco(self, destinatario):
-        return destinatario["email"]
-
-    def enviar(self, endereco, assunto, corpo):
+    def enviar(self, endereco, assunto, corpo, resumo, link):
         send_mail(assunto, corpo, None, [endereco], fail_silently=False)
 
 
@@ -94,21 +89,30 @@ def _quando(consulta):
     return f"{local:%d/%m/%Y} às {local:%H:%M}"
 
 
-def montar_mensagem(consulta, tipo, destinatario):
-    nome = destinatario["nome"].split()[0] if destinatario["nome"] else ""
+def resumo_da_mensagem(consulta, tipo):
+    """Frase curta e neutra, usada tambem em notificacoes push."""
     quando = _quando(consulta)
-    abertura = {
+    return {
         Aviso.Tipo.CONFIRMACAO: f"Você tem um compromisso em {quando}.",
         Aviso.Tipo.LEMBRETE: f"Lembrete: você tem um compromisso em {quando}.",
         Aviso.Tipo.REMARCACAO: f"Seu compromisso foi remarcado para {quando}.",
         Aviso.Tipo.CANCELAMENTO: f"O compromisso de {quando} foi cancelado.",
     }[tipo]
+
+
+def link_do_portal(consulta) -> str:
+    return f"{settings.PSIQ_URL_BASE.rstrip('/')}/portal/{consulta.consultorio_id}/entrar/"
+
+
+def montar_mensagem(consulta, tipo, destinatario):
+    nome = destinatario["nome"].split()[0] if destinatario["nome"] else ""
+    abertura = resumo_da_mensagem(consulta, tipo)
     linhas = [f"Olá, {nome}." if nome else "Olá.", "", abertura]
     if tipo != Aviso.Tipo.CANCELAMENTO:
         if consulta.link_online:
             linhas += ["", f"Acesse no horário combinado: {consulta.link_online}"]
         linhas += ["", f"Para confirmar ou cancelar: {link_acao(consulta, destinatario['paciente'])}"]
-        linhas += [f"Seu portal: {settings.PSIQ_URL_BASE.rstrip('/')}/portal/{consulta.consultorio_id}/entrar/"]
+        linhas += [f"Seu portal: {link_do_portal(consulta)}"]
     linhas += ["", consulta.consultorio.nome]
     return f"Aviso de {consulta.consultorio.nome}", "\n".join(linhas)
 
@@ -119,22 +123,20 @@ def enviar(consulta, tipo):
     registros = []
     for destinatario in destinatarios(consulta):
         assunto, corpo = montar_mensagem(consulta, tipo, destinatario)
+        resumo = resumo_da_mensagem(consulta, tipo)
+        link = link_do_portal(consulta)
         for canal in CANAIS.values():
-            if not canal.disponivel(destinatario):
-                continue
-            aviso = Aviso.objects.create(
-                consultorio_id=consulta.consultorio_id,
-                consulta=consulta,
-                canal=canal.nome,
-                tipo=tipo,
-                destinatario=canal.endereco(destinatario),
-            )
-            try:
-                canal.enviar(canal.endereco(destinatario), assunto, corpo)
-                aviso.status, aviso.enviado_em = Aviso.Status.ENVIADO, timezone.now()
-            except Exception as exc:  # canal externo: registrar e seguir
-                logger.warning("Falha ao enviar aviso %s: %s", aviso.pk, type(exc).__name__)
-                aviso.status, aviso.erro = Aviso.Status.FALHOU, type(exc).__name__
-            aviso.save(update_fields=["status", "enviado_em", "erro", "atualizado_em"])
-            registros.append(aviso)
+            for endereco in canal.enderecos(destinatario):
+                aviso = Aviso.objects.create(
+                    consultorio_id=consulta.consultorio_id, consulta=consulta, canal=canal.nome, tipo=tipo,
+                    destinatario=endereco[:254],
+                )
+                try:
+                    canal.enviar(endereco, assunto, corpo, resumo, link)
+                    aviso.status, aviso.enviado_em = Aviso.Status.ENVIADO, timezone.now()
+                except Exception as exc:  # canal externo: registrar e seguir
+                    logger.warning("Falha ao enviar aviso %s: %s", aviso.pk, type(exc).__name__)
+                    aviso.status, aviso.erro = Aviso.Status.FALHOU, type(exc).__name__
+                aviso.save(update_fields=["status", "enviado_em", "erro", "atualizado_em"])
+                registros.append(aviso)
     return registros

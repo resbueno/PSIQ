@@ -1,0 +1,14 @@
+{% load static %}{
+  "name": "PSIQ",
+  "short_name": "PSIQ",
+  "description": "Agenda, pacientes, financeiro e prontuário para psicologia e psiquiatria.",
+  "lang": "pt-BR",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f3f6f6",
+  "theme_color": "#16303a",
+  "icons": [
+    {"src": "{% static 'pwa/icone.svg' %}", "sizes": "any", "type": "image/svg+xml", "purpose": "any"}
+  ]
+}

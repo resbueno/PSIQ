@@ -111,6 +111,7 @@ class SolicitacaoHorario(ModeloBase):
 class Aviso(ModeloBase):
     class Canal(models.TextChoices):
         EMAIL = "email", "E-mail"
+        PUSH = "push", "Notificação no aparelho"
 
     class Tipo(models.TextChoices):
         CONFIRMACAO = "confirmacao", "Confirmação"

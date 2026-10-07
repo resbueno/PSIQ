@@ -13,5 +13,6 @@
   </div>
 </div>
 {% empty %}<p class="ajuda">Você não tem compromissos marcados. <a href="{% url 'portal:agendar' %}">Marcar um horário</a></p>{% endfor %}
+{% if vapid_public %}<p><button id="ativar-push" class="botao secundario" type="button" data-chave="{{ vapid_public }}" data-url="{% url 'portal:push_inscrever' %}">Ativar notificações neste aparelho</button></p>{% endif %}
 {% if pendentes %}<h2>Pedidos aguardando o consultório</h2><ul class="lista-simples">{% for s in pendentes %}<li>{{ s.horario_desejado|date:"d/m/Y H:i" }}<span class="etiqueta pendente">Aguardando</span></li>{% endfor %}</ul>{% endif %}
 {% endblock %}

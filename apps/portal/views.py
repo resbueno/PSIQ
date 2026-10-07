@@ -1,10 +1,12 @@
+import json
 from datetime import date, datetime, timedelta
 from functools import wraps
 from zoneinfo import ZoneInfo
 
 from django import forms
+from django.conf import settings
 from django.contrib import messages
-from django.http import Http404, HttpResponse
+from django.http import Http404, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.utils.http import content_disposition_header
@@ -29,7 +31,7 @@ from apps.prontuario.models import ConsentimentoPaciente, Documento, Prontuario
 from apps.prontuario.servico import ErroProntuario
 
 from . import servico
-from .models import SolicitacaoLGPD
+from .models import AssinaturaPush, SolicitacaoLGPD
 
 JANELA_DIAS = 14
 
@@ -140,6 +142,7 @@ def home(request):
         "proximas": consultas.filter(inicio__gte=agora, status__in=Consulta.ATIVAS),
         "pendentes": SolicitacaoHorario.objects.filter(paciente=request.paciente, status=SolicitacaoHorario.Status.PENDENTE),
         "agora": agora, "sala_a_partir_de": agora + timedelta(minutes=15),
+        "vapid_public": settings.PSIQ_VAPID_PUBLIC_KEY,
     })
 
 
@@ -300,3 +303,38 @@ def lgpd_atender(request, pk):
     servico.atender_solicitacao_lgpd(request, solicitacao)
     messages.success(request, "Pedido marcado como atendido.")
     return redirect("portal:lgpd_lista")
+
+
+# --------------------------------------------------------------------------- notificacoes push
+
+
+def _json_do_corpo(request):
+    try:
+        dados = json.loads(request.body or b"{}")
+    except ValueError:
+        return None
+    return dados if isinstance(dados, dict) else None
+
+
+@portal_logado
+@require_POST
+def push_inscrever(request):
+    dados = _json_do_corpo(request) or {}
+    chaves = dados.get("keys") or {}
+    endpoint, p256dh, auth = dados.get("endpoint", ""), chaves.get("p256dh", ""), chaves.get("auth", "")
+    if not (isinstance(endpoint, str) and endpoint.startswith("https://") and len(endpoint) < 2000 and p256dh and auth):
+        return JsonResponse({"ok": False}, status=400)
+    AssinaturaPush.objects.update_or_create(
+        paciente=request.paciente, endpoint=endpoint,
+        defaults={"consultorio": request.consultorio, "p256dh": str(p256dh)[:200], "auth": str(auth)[:100], "ativa": True},
+    )
+    auditoria.registrar(request, "push_inscrito", "paciente", request.paciente.pk, consultorio_id=request.consultorio.pk)
+    return JsonResponse({"ok": True})
+
+
+@portal_logado
+@require_POST
+def push_cancelar(request):
+    dados = _json_do_corpo(request) or {}
+    AssinaturaPush.objects.filter(paciente=request.paciente, endpoint=dados.get("endpoint", "")).update(ativa=False)
+    return JsonResponse({"ok": True})

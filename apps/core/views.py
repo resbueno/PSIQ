@@ -44,3 +44,15 @@ def painel(request):
         contexto["usuarios_ativos"] = Vinculo.objects.filter(consultorio=request.consultorio, ativo=True).count()
         contexto["eventos"] = Auditoria.objects.all()[:8]
     return render(request, "core/painel.html", contexto)
+
+
+def service_worker(request):
+    """Service worker na raiz (escopo '/'). Sem cache de dados; usado so para push."""
+    resposta = render(request, "pwa/sw.js", content_type="application/javascript")
+    resposta["Service-Worker-Allowed"] = "/"
+    resposta["Cache-Control"] = "no-cache"
+    return resposta
+
+
+def manifesto(request):
+    return render(request, "pwa/manifest.webmanifest", content_type="application/manifest+json")
