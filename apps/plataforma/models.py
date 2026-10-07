@@ -31,6 +31,7 @@ class Consultorio(ModeloBase):
     status = models.CharField(max_length=20, choices=Status.choices, default=Status.ATIVO)
     fuso = models.CharField(max_length=64, default="America/Sao_Paulo")
     politica_cancelamento_horas = models.PositiveIntegerField(default=24)
+    cobra_falta_tardia = models.BooleanField("cobrar cancelamento tardio", default=False)
     encerrado_em = models.DateTimeField(null=True, blank=True)
 
     def __str__(self):

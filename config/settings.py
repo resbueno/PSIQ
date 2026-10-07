@@ -25,6 +25,7 @@ INSTALLED_APPS = [
     "apps.pacientes",
     "apps.agenda",
     "apps.prontuario",
+    "apps.financeiro",
 ]
 
 MIDDLEWARE = [
