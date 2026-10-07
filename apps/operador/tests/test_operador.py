@@ -280,8 +280,8 @@ def test_autorizacao_vencida_ou_encerrada_derruba_o_acesso(client, cena):
     AcessoSuporte.objects.update(fim=timezone.now() - timedelta(seconds=1))
     assert client.get(reverse("contas:usuarios")).status_code in (302, 403)
 
-    AcessoSuporte.objects.update(fim=timezone.now() + timedelta(hours=1))
     definir_contexto(consultorio_id=cena.consultorio.pk)
+    AcessoSuporte.objects.update(fim=timezone.now() + timedelta(hours=1))
     client.post(reverse("operador:suporte_entrar", args=[cena.consultorio.pk]))
     assert client.get(reverse("contas:usuarios")).status_code == 200
     client.logout()
