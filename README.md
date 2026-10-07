@@ -8,14 +8,14 @@ A especificação fica na pasta `docs/`, mantida só localmente (fora do Git).
 
 | Etapa | Conteúdo | Situação |
 |---|---|---|
-| 1 | Base: consultórios, usuários, perfis, login + 2FA, dispositivos, auditoria, RLS | Escrita, **ainda não executada** (veja abaixo) |
-| 2 | Pacientes e agenda, com avisos | A fazer |
+| 1 | Base: consultórios, usuários, perfis, login + 2FA, dispositivos, auditoria, RLS | Pronta, testes verdes no CI |
+| 2 | Pacientes e agenda, com avisos por e-mail | Pronta, testes verdes no CI (push, FullCalendar e HTMX pendentes) |
 | 3 | Prontuário e documentos | A fazer |
 | 4 | Financeiro, convênio e repasse | A fazer |
 | 5 | Portal do paciente, teleconsulta, calendários | A fazer |
 | 6 | Painel interno, cobrança, relatórios, importação | A fazer |
 
-> A Etapa 1 foi escrita em um computador sem Python nem PostgreSQL. As migrações foram feitas à mão e **nenhum teste rodou ainda**. O primeiro passo é rodar `pytest` e `python manage.py makemigrations --check` e corrigir o que aparecer.
+> Os testes rodam no GitHub Actions (PostgreSQL real). Este repositório foi desenvolvido sem Python local; o CI é o ambiente de verificação.
 
 ### O que a Etapa 1 entrega
 
@@ -79,3 +79,13 @@ scripts/db/        papéis do banco (desenvolvimento e produção)
 - Reuso do mesmo código TOTP dentro da janela de validade não é bloqueado.
 - 2FA obrigatório para o operador no `/admin/` (Etapa 6).
 - Tailwind e HTMX entram junto com as telas das próximas etapas; a Etapa 1 usa CSS simples em `static/css/psiq.css`.
+
+## Etapa 2: pacientes, agenda e avisos
+
+- **Pacientes** (`apps/pacientes`): CPF único por consultório (aceita máscara), responsáveis legais, pagador do recibo, casal/família/grupo, mesclagem de duplicados que reaponta todo o histórico e arquiva o duplicado (nada é apagado, tudo auditado). O profissional enxerga só os seus pacientes; assistente e admin, todos do consultório.
+- **Agenda** (`apps/agenda`): consultas com detecção de conflito por profissional, recorrência semanal ou quinzenal (cada sessão é uma consulta; cancelar uma não apaga a série), remarcação, confirmação, realizada/falta, cancelamento com prazo configurável por consultório (padrão 24 h) e marca de cancelamento tardio, link Jitsi único por consulta online, solicitações de horário com aprovação (a primeira consulta sempre passa por aprovação; retornos, só se o paciente estiver marcado), horários livres a partir das regras semanais.
+- **Avisos** (`apps/agenda/avisos.py`): canais plugáveis (hoje e-mail), texto neutro que não cita tipo de atendimento, registro de cada envio e de falhas. O link do aviso abre uma página sem login que só confirma ou cancela aquela consulta (token assinado; a ação é POST, para que leitores de e-mail não confirmem sozinhos).
+- **Lembretes:** `python manage.py enviar_lembretes` envia o lembrete das consultas das próximas 24 h, uma vez por consulta. Agende a cada 15 minutos (cron).
+- **Painel:** consultas do dia, solicitações pendentes e pacientes sem consulta há mais de 60 dias.
+
+Pendente da Etapa 2: aviso por push (PWA), mensagem ao recusar solicitação, FullCalendar e HTMX na agenda, fila assíncrona (hoje os avisos saem na hora, dentro da requisição), regras semanais de atendimento sem tela (cadastradas pelo `/admin/`) e aviso único por série (hoje só a primeira sessão recebe confirmação).
