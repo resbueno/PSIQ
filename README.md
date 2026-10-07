@@ -10,7 +10,7 @@ A especificação fica na pasta `docs/`, mantida só localmente (fora do Git).
 |---|---|---|
 | 1 | Base: consultórios, usuários, perfis, login + 2FA, dispositivos, auditoria, RLS | Pronta, testes verdes no CI |
 | 2 | Pacientes e agenda, com avisos por e-mail | Pronta, testes verdes no CI (push, FullCalendar e HTMX pendentes) |
-| 3 | Prontuário e documentos | A fazer |
+| 3 | Prontuário e documentos | Pronta, testes verdes no CI |
 | 4 | Financeiro, convênio e repasse | A fazer |
 | 5 | Portal do paciente, teleconsulta, calendários | A fazer |
 | 6 | Painel interno, cobrança, relatórios, importação | A fazer |
@@ -89,3 +89,15 @@ scripts/db/        papéis do banco (desenvolvimento e produção)
 - **Painel:** consultas do dia, solicitações pendentes e pacientes sem consulta há mais de 60 dias.
 
 Pendente da Etapa 2: aviso por push (PWA), mensagem ao recusar solicitação, FullCalendar e HTMX na agenda, fila assíncrona (hoje os avisos saem na hora, dentro da requisição), regras semanais de atendimento sem tela (cadastradas pelo `/admin/`) e aviso único por série (hoje só a primeira sessão recebe confirmação).
+
+## Etapa 3: prontuário e documentos
+
+- **Criptografia por campo** (`apps/prontuario/chaves.py`, `apps/core/cripto.py`): cada profissional tem uma chave de dados, guardada no banco cifrada pela chave mestra (que fica fora do banco e do backup). Conteúdo, CID e arquivos são cifrados com ela; cada versão registra a chave que usou, então a rotação (`rotacionar_chaves`) não quebra o histórico. `PSIQ_CHAVE_MESTRA` aceita várias chaves separadas por vírgula; `rotacionar_chave_mestra` reescreve os segredos com a primeira.
+- **Versões append-only:** editar cria uma versão nova; o banco bloqueia `UPDATE` de versões e só permite `DELETE` na exclusão antecipada autorizada (flag local à transação, fechado ao fim da operação).
+- **Quem lê:** só o profissional dono. Assistente e admin leem apenas se o dono liberar. Outro profissional precisa, além da liberação, do aceite eletrônico do paciente (link por e-mail com data, hora, IP e versão do termo, revogável pelo mesmo link; revogar derruba o acesso). Toda abertura e leitura é auditada. Exige 2FA, não fica em cache do navegador e a sessão na área de prontuário expira em 15 min de inatividade (`PSIQ_INATIVIDADE_PRONTUARIO_SEGUNDOS`). Quem não pode ler recebe 404.
+- **Anexos:** extensões permitidas, limite de 10 MB, cifrados antes de ir ao armazenamento, com hash de integridade. Hoje o armazenamento é em disco (`PSIQ_ANEXOS_DIR`); a interface (`armazenamento.py`) está pronta para um backend S3-compatível.
+- **Documentos:** modelos editáveis por consultório com marcadores (`{{paciente_nome}}` etc.), PDF gerado no servidor. Documentos clínicos ficam no prontuário, cifrados; a declaração de comparecimento usa só dados da agenda e pode ser emitida pela assistente. O profissional decide o que é liberado ao paciente.
+- **Retenção:** prazo de guarda calculado (médico 20 anos, psicólogo 5, a partir do último registro). Exclusão antecipada só pelo dono, com nome do paciente digitado, motivo e auditoria; apaga conteúdo e arquivos e mantém um registro mínimo do fato.
+- **Delegação:** o admin troca o dono de um prontuário (saída de profissional) sem ver o conteúdo; a troca fica registrada e o novo dono lê as versões antigas.
+
+Pendente da Etapa 3: busca por texto (decisão futura, por causa da cifra), assinatura digital (fora de escopo), pedido de exclusão vindo do portal (Etapa 5) e backend S3 para anexos.
