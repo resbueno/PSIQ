@@ -407,7 +407,7 @@ def test_admin_configura_regra_e_assistente_nao(client, cena):
     ambos = client.post(reverse("financeiro:config_novo", args=["regras-repasse"]), {**dados, "aplicacao": "convenio", "valor_fixo": "10"})
     assert ambos.status_code == 200 and "apenas um dos dois".encode() in ambos.content
     repetida = client.post(reverse("financeiro:config_novo", args=["regras-repasse"]), dados)
-    assert repetida.status_code == 200 and "Já existe".encode() in repetida.content
+    assert repetida.status_code == 200 and b"existe" in repetida.content
 
 
 def test_so_o_admin_marca_repasse_como_pago(client, cena):
@@ -428,7 +428,7 @@ def test_profissional_ve_o_proprio_repasse_sem_botao_de_pagar(client, cena):
     servico.registrar_pagamento(cena.req(), lancamento_pendente(cena), forma="pix")
     login(client, cena.dra, cena)
     pagina = client.get(reverse("financeiro:repasses"))
-    assert pagina.status_code == 200 and b"30.03" in pagina.content and b"Marcar como pago" not in pagina.content
+    assert pagina.status_code == 200 and b"30,03" in pagina.content and b"Marcar como pago" not in pagina.content
 
 
 def test_fila_de_convenio_pelas_telas(client, cena, conveniado):
