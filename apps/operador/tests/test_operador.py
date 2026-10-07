@@ -286,6 +286,7 @@ def test_autorizacao_vencida_ou_encerrada_derruba_o_acesso(client, cena):
     assert client.get(reverse("contas:usuarios")).status_code == 200
     client.logout()
     entrar_com_2fa(client, cena.admin)
+    definir_contexto(consultorio_id=cena.consultorio.pk)
     acesso = AcessoSuporte.objects.get()
     client.post(reverse("operador:suporte_revogar", args=[acesso.pk]))
     client.logout()
