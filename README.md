@@ -13,7 +13,7 @@ A especificação fica na pasta `docs/`, mantida só localmente (fora do Git).
 | 3 | Prontuário e documentos | Pronta, testes verdes no CI |
 | 4 | Financeiro, convênio e repasse | Pronta, testes verdes no CI |
 | 5 | Portal do paciente, teleconsulta, calendários | Pronta, testes verdes no CI |
-| 6 | Painel interno, cobrança, relatórios, importação | A fazer |
+| 6 | Painel interno, cobrança, relatórios, importação | Pronta, testes verdes no CI |
 
 > Os testes rodam no GitHub Actions (PostgreSQL real). Este repositório foi desenvolvido sem Python local; o CI é o ambiente de verificação.
 
@@ -124,3 +124,22 @@ Pendente da Etapa 4: relatórios financeiros (Etapa 6), lançamento de consultas
 - **Calendários externos** (`apps/calendarios`): OAuth com Google Calendar e Outlook/Microsoft 365, tokens cifrados pela chave mestra, `state` assinado e amarrado à sessão. Consultas vão ao calendário como "Consulta" e o horário (o nome do paciente só aparece se o profissional ligar essa opção); compromissos pessoais voltam como bloqueios que somem dos horários oferecidos no portal. `python manage.py sincronizar_calendarios` a cada 10 min (cron) ou "Sincronizar agora" na tela. Antes de usar: registrar o app no Google Cloud e no Azure e passar pela revisão deles (pré-requisito do docs/02), e preencher `PSIQ_GOOGLE_*` e `PSIQ_MICROSOFT_*`.
 
 Pendente da Etapa 5: sincronização em tempo real (hoje por cron e sob demanda; a fila assíncrona entra com a infraestrutura), exportação de consultas em grupo para o calendário externo com nomes, e revisão de segurança dedicada (docs/06) antes do primeiro cliente.
+
+## Etapa 6: operação, relatórios, exportação e importação
+
+- **Painel do operador** (`/operador/`, equipe da plataforma com 2FA obrigatório, inclusive no `/admin/`): consultórios com plano, situação, uso (pacientes ativos × limite, profissionais) e cobranças em aberto; cria consultório com o primeiro admin, troca plano e situação, registra cobrança e marca pagamento manual. Só números de conta: nunca conteúdo clínico.
+- **Inadimplência** (`atualizar_inadimplencia`, diária): cobrança vencida avisa os admins por e-mail e abre carência de 15 dias; depois o consultório fica em somente leitura. Pagou, volta na hora. Nunca há corte total: leitura e exportação continuam liberadas.
+- **Suporte autorizado pelo cliente:** o admin do consultório autoriza um atendente por 1, 4 ou 24 horas, com motivo. O acesso é somente leitura, **nunca alcança prontuários** (a regra de autoria vale para o suporte também), cada requisição vai para a auditoria do cliente e o cliente pode encerrar a qualquer momento.
+- **Relatórios** (`/relatorios/`): agenda (faltas, cancelamentos, ocupação), financeiro (faturamento, inadimplência, repasses, glosas por operadora) e pacientes (visão geral, novos, sem consulta há X dias), em tela, CSV (proteção contra injeção de fórmula) e PDF, por perfil (profissional vê só os próprios números; assistente não vê repasses). Nenhum traz conteúdo clínico ou CID; os que listam nomes de pacientes geram auditoria.
+- **Exportação completa** (`/exportacao/`, nunca bloqueada): o admin baixa cadastro, agenda, financeiro, usuários, recibos, declarações e auditoria em CSV e JSON (sem prontuários); cada profissional baixa os próprios prontuários decifrados (todas as versões, anexos e documentos), com 2FA e auditoria. Contrato encerrado: 90 dias só para exportar.
+- **Importação de pacientes** (`/importacao/`): planilha CSV ou XLSX com modelo para baixar, prévia com validação de CPF, telefone, data e e-mail, aviso de duplicados (CPF já cadastrado ou repetido na planilha; mesmo nome e nascimento vira alerta) e confirmação em um segundo passo. Prontuário antigo entra como anexo "histórico importado".
+- **Operação:** `GET /saude/`, `verificar_saude` (backup parado, falhas de aviso, contas com muitas falhas de login, exportações em massa, suporte fora de autorização), `deploy/` com Dockerfile, docker-compose, Caddyfile (TLS) e `OPERACAO.md` (agenda de tarefas, backup, chaves, checklist antes do primeiro cliente).
+
+## O que ainda falta antes do primeiro cliente
+
+Nada disto é código de produto; é o que o próprio roadmap (docs/06) pede:
+
+1. **Revisão jurídica** dos modelos de contrato, política, termo e plano de incidente por advogado.
+2. **Infraestrutura:** VPS, backup contínuo (WAL) em outro provedor, restauração testada, homologação separada, provedor de e-mail transacional (SPF/DKIM), chaves VAPID, registro dos apps OAuth no Google e na Microsoft.
+3. **Revisão de segurança dedicada** (isolamento, permissões, dados em logs, dependências). Itens conhecidos que ainda não foram feitos: redefinição de senha por e-mail e códigos de recuperação do 2FA, bloqueio de reuso do mesmo código TOTP, limite de taxa (rate limit) nos endpoints públicos (idealmente no proxy), política de CSP (hoje há `onchange` inline em duas telas), fila assíncrona para avisos e sincronizações (hoje na hora ou por cron) e HTMX/FullCalendar/Tailwind (a interface usa CSS próprio e páginas simples).
+4. **Piloto** com um consultório real antes de abrir para outros.
