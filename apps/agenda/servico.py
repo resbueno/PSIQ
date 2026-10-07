@@ -279,7 +279,14 @@ def horarios_livres(consultorio, profissional, dia):
         atual = datetime.combine(dia, regra.hora_inicio, tzinfo=fuso)
         limite = datetime.combine(dia, regra.hora_fim, tzinfo=fuso)
         while atual + passo <= limite:
-            if atual > agora and not _conflito(profissional, atual, atual + passo):
+            if atual > agora and not _conflito(profissional, atual, atual + passo) and not _bloqueado_externamente(profissional, atual, atual + passo):
                 livres.append(atual)
             atual += passo
     return sorted(livres)
+
+
+def _bloqueado_externamente(profissional, inicio, fim):
+    """Compromissos pessoais importados de Google/Outlook bloqueiam os horarios oferecidos ao paciente."""
+    from apps.calendarios.sync import bloqueado_externamente
+
+    return bloqueado_externamente(profissional, inicio, fim)

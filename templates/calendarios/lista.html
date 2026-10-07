@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block titulo %}Calendários · PSIQ{% endblock %}
+{% block conteudo %}
+<h1>Calendários externos</h1>
+<p>Conecte o Google Calendar ou o Outlook para ver suas consultas no celular e bloquear no PSIQ os horários em que você já tem outro compromisso. Os eventos criados mostram só “Consulta” e o horário, sem o nome do paciente, a menos que você ative essa opção.</p>
+{% for o in opcoes %}
+<section class="dia" style="margin-bottom:1rem">
+  <h2>{{ o.rotulo }}</h2>
+  {% if o.conta %}
+    <p>Conectado{% if o.conta.email_conta %} como {{ o.conta.email_conta }}{% endif %}.
+      {% if o.conta.ultima_sincronizacao %}Última sincronização em {{ o.conta.ultima_sincronizacao|date:"d/m/Y H:i" }}.{% endif %}</p>
+    {% if o.conta.ultimo_erro %}<p class="erro">Falha na última sincronização ({{ o.conta.ultimo_erro }}). Se continuar, reconecte.</p>{% endif %}
+    <div class="acoes">
+      <form method="post" action="{% url 'calendarios:sincronizar' o.conta.pk %}">{% csrf_token %}<button class="botao" type="submit">Sincronizar agora</button></form>
+      <form method="post" action="{% url 'calendarios:alternar_nome' o.conta.pk %}">{% csrf_token %}<button class="botao secundario" type="submit">{% if o.conta.mostra_nome_paciente %}Ocultar o nome do paciente nos eventos{% else %}Mostrar o nome do paciente nos eventos{% endif %}</button></form>
+      <form method="post" action="{% url 'calendarios:desconectar' o.conta.pk %}">{% csrf_token %}<button class="botao perigo" type="submit">Desconectar</button></form>
+    </div>
+  {% elif o.configurado %}
+    <p><a class="botao" href="{% url 'calendarios:conectar' o.chave %}">Conectar</a></p>
+  {% else %}
+    <p class="ajuda">Integração ainda não configurada neste sistema.</p>
+  {% endif %}
+</section>
+{% endfor %}
+{% endblock %}

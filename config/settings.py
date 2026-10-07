@@ -27,6 +27,7 @@ INSTALLED_APPS = [
     "apps.prontuario",
     "apps.financeiro",
     "apps.portal",
+    "apps.calendarios",
 ]
 
 MIDDLEWARE = [
@@ -159,3 +160,11 @@ PSIQ_PORTAL_IDADE_MINIMA_ACESSO_PROPRIO = 16
 PSIQ_VAPID_PUBLIC_KEY = env("PSIQ_VAPID_PUBLIC_KEY", default="")
 PSIQ_VAPID_PRIVATE_KEY = env("PSIQ_VAPID_PRIVATE_KEY", default="")
 PSIQ_VAPID_SUBJECT = env("PSIQ_VAPID_SUBJECT", default="mailto:contato@localhost")
+
+# Calendarios externos (OAuth). Registre o app no Google Cloud e no Azure e informe as credenciais.
+PSIQ_GOOGLE_CLIENT_ID = env("PSIQ_GOOGLE_CLIENT_ID", default="")
+PSIQ_GOOGLE_CLIENT_SECRET = env("PSIQ_GOOGLE_CLIENT_SECRET", default="")
+PSIQ_MICROSOFT_CLIENT_ID = env("PSIQ_MICROSOFT_CLIENT_ID", default="")
+PSIQ_MICROSOFT_CLIENT_SECRET = env("PSIQ_MICROSOFT_CLIENT_SECRET", default="")
+PSIQ_MICROSOFT_TENANT = env("PSIQ_MICROSOFT_TENANT", default="common")
+PSIQ_CALENDARIO_JANELA_DIAS = 60

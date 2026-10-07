@@ -26,6 +26,7 @@
         <a href="{% url 'pacientes:lista' %}">Pacientes</a>
         <a href="{% url 'pacientes:grupos' %}">Casais e grupos</a>
         <a href="{% url 'prontuario:lista' %}">Prontuários</a>
+        {% if perfil_ativo == 'profissional' %}<a href="{% url 'calendarios:lista' %}">Calendários</a>{% endif %}
         <a href="{% url 'financeiro:lancamentos' %}">Financeiro</a>
         <a href="{% url 'financeiro:repasses' %}">Repasses</a>
         <a href="{% url 'portal:lgpd_lista' %}">Pedidos de pacientes</a>
