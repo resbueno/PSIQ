@@ -1,0 +1,16 @@
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.env
+*.sqlite3
+staticfiles/
+node_modules/
+.pytest_cache/
+.coverage
+htmlcov/
+.idea/
+.vscode/
+
+# Especificação interna (não publicar)
+docs/

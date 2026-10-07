@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block titulo %}Auditoria · PSIQ{% endblock %}
+{% block conteudo %}
+<h1>Auditoria</h1>
+<p>Os 200 eventos mais recentes deste consultório. Os registros não podem ser alterados nem apagados.</p>
+<div class="tabela-rolagem">
+<table>
+  <thead><tr><th>Quando</th><th>Ação</th><th>Objeto</th><th>IP</th></tr></thead>
+  <tbody>
+  {% for e in eventos %}
+    <tr><td>{{ e.criado_em|date:"d/m/Y H:i:s" }}</td><td class="mono">{{ e.acao }}</td><td>{{ e.objeto }}</td><td class="mono">{{ e.ip|default:"—" }}</td></tr>
+  {% empty %}
+    <tr><td colspan="4">Nenhum evento registrado ainda.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}

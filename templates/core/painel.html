@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block titulo %}Painel · PSIQ{% endblock %}
+{% block conteudo %}
+<h1>Olá, {{ user.nome }}</h1>
+<p>Agenda, pacientes, prontuário e financeiro chegam nas próximas etapas. Por enquanto, o consultório já conta com acesso seguro, perfis e auditoria.</p>
+{% if perfil_ativo == 'admin' %}
+  <h2>Resumo do consultório</h2>
+  <p>{{ usuarios_ativos }} usuário{{ usuarios_ativos|pluralize }} com acesso ativo.</p>
+  <h2>Atividade recente</h2>
+  <div class="tabela-rolagem">
+  <table>
+    <thead><tr><th>Quando</th><th>Ação</th></tr></thead>
+    <tbody>
+    {% for e in eventos %}<tr><td>{{ e.criado_em|date:"d/m/Y H:i" }}</td><td class="mono">{{ e.acao }}</td></tr>
+    {% empty %}<tr><td colspan="2">Nenhum evento ainda.</td></tr>{% endfor %}
+    </tbody>
+  </table>
+  </div>
+{% endif %}
+{% endblock %}

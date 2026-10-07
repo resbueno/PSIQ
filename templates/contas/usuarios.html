@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block titulo %}Usuários · PSIQ{% endblock %}
+{% block conteudo %}
+<h1>Usuários do consultório</h1>
+<p><a class="botao" href="{% url 'contas:novo_usuario' %}">Adicionar usuário</a></p>
+<div class="tabela-rolagem">
+<table>
+  <thead><tr><th>Nome</th><th>E-mail</th><th>Perfil</th><th>Registro</th><th>Acesso</th><th></th></tr></thead>
+  <tbody>
+  {% for v in vinculos %}
+    <tr>
+      <td>{{ v.usuario.nome }}</td>
+      <td>{{ v.usuario.email }}</td>
+      <td>{{ v.get_perfil_display }}</td>
+      <td>
+        {% if v.perfil == 'profissional' and v.usuario.profissional %}
+          {{ v.usuario.profissional.conselho }} {{ v.usuario.profissional.numero }}/{{ v.usuario.profissional.uf }}
+          {% if v.usuario.profissional.validado %}<span class="etiqueta ok">Validado</span>{% else %}<span class="etiqueta pendente">Aguardando validação</span>{% endif %}
+        {% else %}—{% endif %}
+      </td>
+      <td>{% if v.ativo %}<span class="etiqueta ok">Ativo</span>{% else %}<span class="etiqueta">Desativado</span>{% endif %}</td>
+      <td>
+        {% if v.usuario_id != user.pk %}
+        <form method="post" action="{% url 'contas:alternar_vinculo' v.pk %}">{% csrf_token %}
+          <button class="botao secundario" type="submit">{% if v.ativo %}Desativar{% else %}Reativar{% endif %}</button>
+        </form>
+        {% endif %}
+      </td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}
