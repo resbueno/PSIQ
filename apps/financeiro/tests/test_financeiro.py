@@ -407,7 +407,7 @@ def test_admin_configura_regra_e_assistente_nao(client, cena):
     ambos = client.post(reverse("financeiro:config_novo", args=["regras-repasse"]), {**dados, "aplicacao": "convenio", "valor_fixo": "10"})
     assert ambos.status_code == 200 and "apenas um dos dois".encode() in ambos.content
     repetida = client.post(reverse("financeiro:config_novo", args=["regras-repasse"]), dados)
-    assert repetida.status_code == 200 and b"Já existe" in repetida.content
+    assert repetida.status_code == 200 and "Já existe".encode() in repetida.content
 
 
 def test_so_o_admin_marca_repasse_como_pago(client, cena):
