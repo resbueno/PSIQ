@@ -161,6 +161,10 @@ def cancelar(request, consulta, por, tardia=False):
         request, "consulta_cancelada", "consulta", consulta.pk, consultorio_id=consulta.consultorio_id, por=por,
         falta_tardia=consulta.falta_tardia,
     )
+    if consulta.falta_tardia:
+        from apps.financeiro import servico as financeiro
+
+        financeiro.gerar_lancamento_falta_tardia(request, consulta)
     avisos.enviar(consulta, Aviso.Tipo.CANCELAMENTO)
 
 
@@ -202,6 +206,10 @@ def marcar_realizada(request, consulta):
     consulta.save(update_fields=["status", "atualizado_em"])
     for paciente in _participantes(consulta):
         Paciente.objects.filter(pk=paciente.pk).update(ultimo_atendimento_em=consulta.inicio)
+    if consulta.paciente_id:  # cobranca automatica (sem valor configurado, nao cria nada e a tela de consulta oferece lancar manualmente)
+        from apps.financeiro import servico as financeiro
+
+        financeiro.gerar_lancamento(request, consulta)
     auditoria.registrar(request, "consulta_realizada", "consulta", consulta.pk)
 
 

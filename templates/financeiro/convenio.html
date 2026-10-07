@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block titulo %}Convênios · PSIQ{% endblock %}
+{% block conteudo %}
+<h1>Fila de convênios</h1>
+<h2>Realizados, a faturar</h2>
+<form method="post" action="{% url 'financeiro:convenio_faturar' %}">{% csrf_token %}
+<div class="tabela-rolagem"><table>
+  <thead><tr><th></th><th>Paciente</th><th>Operadora</th><th>Carteirinha</th><th>Valor</th></tr></thead>
+  <tbody>{% for a in realizados %}<tr><td><input type="checkbox" name="atendimento" value="{{ a.pk }}" aria-label="Selecionar"></td><td>{{ a.lancamento.paciente.nome }}</td><td>{{ a.lancamento.convenio }}</td><td>{{ a.carteirinha|default:"—" }}</td><td>R$ {{ a.lancamento.valor }}</td></tr>
+  {% empty %}<tr><td colspan="5">Nada a faturar.</td></tr>{% endfor %}</tbody></table></div>
+  {% if realizados %}<div class="busca"><input type="text" name="demonstrativo" placeholder="Lote ou demonstrativo" aria-label="Lote"><button class="botao" type="submit">Marcar como faturados</button></div>{% endif %}
+</form>
+
+<h2>Faturados, aguardando retorno</h2>
+{% for a in faturados %}
+<form method="post" action="{% url 'financeiro:convenio_retorno' a.pk %}" class="busca">{% csrf_token %}
+  <span><strong>{{ a.lancamento.paciente.nome }}</strong> · {{ a.lancamento.convenio }} · R$ {{ a.lancamento.valor }} {% if a.demonstrativo %}<span class="ajuda">lote {{ a.demonstrativo }}</span>{% endif %}</span>
+  <input type="text" name="valor_recebido" placeholder="Recebido (R$)" inputmode="decimal" aria-label="Valor recebido" required>
+  <input type="text" name="motivo" placeholder="Motivo da glosa, se houve" aria-label="Motivo da glosa">
+  <button class="botao secundario" type="submit">Registrar retorno</button>
+</form>
+{% empty %}<p class="ajuda">Nenhum atendimento aguardando retorno.</p>{% endfor %}
+
+<h2>Glosados</h2>
+<ul class="lista-simples">
+{% for a in glosados %}<li><span>{{ a.lancamento.paciente.nome }} · R$ {{ a.valor_glosado }}</span><span class="ajuda">{{ a.motivo_glosa }}</span></li>{% empty %}<li>Nenhuma glosa.</li>{% endfor %}
+</ul>
+{% endblock %}

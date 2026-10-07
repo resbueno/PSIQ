@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block titulo %}{{ titulo }} · PSIQ{% endblock %}
+{% block conteudo %}
+<h1>{{ titulo }}</h1>
+<form method="post" class="campos" novalidate>{% csrf_token %}
+  {% include "_campos.html" %}
+  <div><button class="botao" type="submit">Salvar</button>
+  {% if voltar %}<a class="botao secundario" href="{% url 'financeiro:config_lista' voltar %}">Cancelar</a>{% else %}<a class="botao secundario" href="{% url 'financeiro:lancamentos' %}">Cancelar</a>{% endif %}</div>
+</form>
+{% endblock %}

@@ -22,11 +22,17 @@
         <a href="{% url 'pacientes:lista' %}">Pacientes</a>
         <a href="{% url 'pacientes:grupos' %}">Casais e grupos</a>
         <a href="{% url 'prontuario:lista' %}">Prontuários</a>
+        <a href="{% url 'financeiro:lancamentos' %}">Financeiro</a>
+        <a href="{% url 'financeiro:repasses' %}">Repasses</a>
+        {% if perfil_ativo != 'profissional' %}<a href="{% url 'financeiro:convenio' %}">Convênios (fila)</a>{% endif %}
       {% endif %}
       {% if perfil_ativo == 'admin' %}
         <a href="{% url 'contas:usuarios' %}">Usuários</a>
         <a href="{% url 'contas:auditoria' %}">Auditoria</a>
         <a href="{% url 'prontuario:delegar' %}">Delegar prontuários</a>
+        <a href="{% url 'financeiro:config_lista' 'convenios' %}">Convênios e valores</a>
+        <a href="{% url 'financeiro:config_lista' 'regras-repasse' %}">Regras de repasse</a>
+        <a href="{% url 'financeiro:config_lista' 'recorrentes' %}">Aluguel de sala</a>
       {% endif %}
       <a href="{% url 'contas:dispositivos' %}">Dispositivos conectados</a>
       {% if user.is_authenticated %}<a href="{% url 'contas:escolher_consultorio' %}">Trocar de consultório</a>{% endif %}

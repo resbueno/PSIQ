@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block titulo %}Lançamento · PSIQ{% endblock %}
+{% block conteudo %}
+<h1>R$ {{ l.valor }}</h1>
+<dl class="dados">
+  <dt>Paciente</dt><dd>{{ l.paciente.nome|default:"—" }}</dd>
+  <dt>Profissional</dt><dd>{{ l.profissional.usuario.nome }}</dd>
+  <dt>Tipo</dt><dd>{{ l.get_tipo_display }}{% if l.convenio %} · {{ l.convenio }}{% endif %} · {{ l.get_origem_display }}</dd>
+  {% if l.descricao %}<dt>Descrição</dt><dd>{{ l.descricao }}</dd>{% endif %}
+  <dt>Vencimento</dt><dd>{{ l.vencimento|date:"d/m/Y" }}</dd>
+  <dt>Situação</dt><dd><span class="etiqueta {% if l.status == 'pago' %}ok{% elif l.atrasado %}pendente{% endif %}">{% if l.atrasado %}Atrasado{% else %}{{ l.get_status_display }}{% endif %}</span>{% if l.pago_em %} em {{ l.pago_em|date:"d/m/Y" }} ({{ l.get_forma_pagamento_display }}){% endif %}</dd>
+  {% if l.consulta_id %}<dt>Consulta</dt><dd><a href="{% url 'agenda:consulta' l.consulta_id %}">{{ l.consulta.inicio|date:"d/m/Y H:i" }}</a></dd>{% endif %}
+  {% if repasse %}<dt>Repasse</dt><dd>R$ {{ repasse.valor }} sobre R$ {{ repasse.base }} · {{ repasse.get_status_display }}</dd>{% endif %}
+  {% if recibo %}<dt>Recibo</dt><dd><a href="{% url 'financeiro:recibo_baixar' recibo.pk %}">Nº {{ recibo.numero }}</a>{% if recibo.numero_nota_externa %} · nota fiscal {{ recibo.numero_nota_externa }}{% endif %}</dd>{% endif %}
+</dl>
+{% if pode_operar %}
+  {% if l.status == 'pendente' and l.tipo != 'convenio' %}
+  <h2>Registrar pagamento</h2>
+  <form method="post" class="campos">{% csrf_token %}<input type="hidden" name="acao" value="pagar">
+    {% include "_campos.html" with form=pagamento_form %}
+    <div><button class="botao" type="submit">Marcar como pago</button></div>
+  </form>
+  <form method="post">{% csrf_token %}<input type="hidden" name="acao" value="cancelar"><button class="botao secundario" type="submit">Cancelar lançamento</button></form>
+  {% elif l.status == 'pago' and l.tipo != 'convenio' %}
+  <div class="acoes">
+    {% if not recibo %}<form method="post">{% csrf_token %}<input type="hidden" name="acao" value="recibo"><button class="botao" type="submit">Emitir recibo</button></form>
+    <form method="post">{% csrf_token %}<input type="hidden" name="acao" value="desfazer"><button class="botao secundario" type="submit">Desfazer pagamento</button></form>{% endif %}
+  </div>
+  {% if recibo %}
+  <h2>Nota fiscal</h2>
+  <form method="post" class="campos">{% csrf_token %}<input type="hidden" name="acao" value="nota">
+    {% include "_campos.html" with form=nota_form %}
+    <div><button class="botao secundario" type="submit">Registrar número da nota</button></div>
+  </form>{% endif %}
+  {% endif %}
+{% endif %}
+<p><a href="{% url 'financeiro:lancamentos' %}">Voltar</a></p>
+{% endblock %}

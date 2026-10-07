@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block titulo %}Financeiro · PSIQ{% endblock %}
+{% block conteudo %}
+<h1>Financeiro</h1>
+<form method="get" class="busca">
+  <label class="sr" for="st">Situação</label>
+  <select name="status" id="st">
+    <option value="">Todas as situações</option>
+    <option value="pendente" {% if status == 'pendente' %}selected{% endif %}>Pendentes</option>
+    <option value="atrasado" {% if status == 'atrasado' %}selected{% endif %}>Atrasados</option>
+    <option value="pago" {% if status == 'pago' %}selected{% endif %}>Pagos</option>
+    <option value="cancelado" {% if status == 'cancelado' %}selected{% endif %}>Cancelados</option>
+  </select>
+  <input type="month" name="mes" value="{{ mes }}" aria-label="Mês de vencimento">
+  <button class="botao" type="submit">Filtrar</button>
+  {% if pode_operar %}<a class="botao secundario" href="{% url 'financeiro:lancamento_manual' %}">Novo lançamento</a>{% endif %}
+</form>
+<p>A receber: <strong>R$ {{ pendente }}</strong> · Recebido: <strong>R$ {{ pago }}</strong></p>
+<div class="tabela-rolagem"><table>
+  <thead><tr><th>Vencimento</th><th>Paciente</th><th>Tipo</th><th>Valor</th><th>Situação</th></tr></thead>
+  <tbody>
+  {% for l in lancamentos %}
+    <tr><td><a href="{% url 'financeiro:lancamento' l.pk %}">{{ l.vencimento|date:"d/m/Y" }}</a></td>
+      <td>{{ l.paciente.nome|default:l.descricao }}</td><td>{{ l.get_tipo_display }}{% if l.convenio %} · {{ l.convenio }}{% endif %}</td>
+      <td>R$ {{ l.valor }}</td>
+      <td><span class="etiqueta {% if l.status == 'pago' %}ok{% elif l.atrasado %}pendente{% endif %}">{% if l.atrasado %}Atrasado{% else %}{{ l.get_status_display }}{% endif %}</span></td></tr>
+  {% empty %}<tr><td colspan="5">Nenhum lançamento neste filtro.</td></tr>{% endfor %}
+  </tbody></table></div>
+{% endblock %}

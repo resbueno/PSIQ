@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block titulo %}{{ titulo }} · PSIQ{% endblock %}
+{% block conteudo %}
+<h1>{{ titulo }}</h1>
+<p class="busca">
+  <a class="botao secundario" href="{% url 'financeiro:config_lista' 'convenios' %}">Convênios</a>
+  <a class="botao secundario" href="{% url 'financeiro:config_lista' 'valores' %}">Valores das sessões</a>
+  <a class="botao secundario" href="{% url 'financeiro:config_lista' 'regras-repasse' %}">Regras de repasse</a>
+  <a class="botao secundario" href="{% url 'financeiro:config_lista' 'recorrentes' %}">Aluguel de sala</a>
+</p>
+<p><a class="botao" href="{% url 'financeiro:config_novo' chave %}">Adicionar</a></p>
+<div class="tabela-rolagem"><table>
+  <thead><tr>{% for c in cabecalhos %}<th>{{ c }}</th>{% endfor %}<th></th></tr></thead>
+  <tbody>
+  {% for obj, valores in linhas %}<tr>{% for v in valores %}<td>{{ v }}</td>{% endfor %}
+    <td><a href="{% url 'financeiro:config_editar' chave obj.pk %}">Editar</a>
+      <form method="post" action="{% url 'financeiro:config_remover' chave obj.pk %}" style="display:inline">{% csrf_token %}<button class="botao secundario" type="submit">Remover</button></form></td></tr>
+  {% empty %}<tr><td colspan="{{ cabecalhos|length|add:1 }}">Nada cadastrado ainda.</td></tr>{% endfor %}
+  </tbody></table></div>
+{% endblock %}

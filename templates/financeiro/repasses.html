@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block titulo %}Repasses · PSIQ{% endblock %}
+{% block conteudo %}
+<h1>Repasses</h1>
+<p>O repasse nasce quando o dinheiro entra (paciente pagou ou o convênio pagou); glosa reduz o valor. O PSIQ calcula e mostra o extrato, mas não movimenta dinheiro.</p>
+<form method="get" class="busca"><input type="month" name="mes" value="{{ mes }}" aria-label="Competência"><button class="botao" type="submit">Filtrar</button></form>
+<p>A pagar: <strong>R$ {{ a_pagar }}</strong></p>
+<div class="tabela-rolagem"><table>
+  <thead><tr><th>Competência</th><th>Profissional</th><th>Paciente</th><th>Base</th><th>Repasse</th><th></th></tr></thead>
+  <tbody>
+  {% for r in repasses %}<tr><td>{{ r.competencia|date:"m/Y" }}</td><td>{{ r.profissional.usuario.nome }}</td><td>{{ r.lancamento.paciente.nome|default:"—" }}</td><td>R$ {{ r.base }}</td><td>R$ {{ r.valor }}</td>
+    <td>{% if r.status == 'pago' %}<span class="etiqueta ok">Pago em {{ r.pago_em|date:"d/m/Y" }}</span>{% elif pode_pagar %}<form method="post" action="{% url 'financeiro:repasse_pagar' r.pk %}">{% csrf_token %}<button class="botao secundario" type="submit">Marcar como pago</button></form>{% else %}<span class="etiqueta pendente">A pagar</span>{% endif %}</td></tr>
+  {% empty %}<tr><td colspan="6">Nenhum repasse neste filtro.</td></tr>{% endfor %}
+  </tbody></table></div>
+{% endblock %}

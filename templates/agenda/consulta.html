@@ -29,6 +29,9 @@
 {% if consulta.status == 'realizada' and consulta.paciente %}
 <form method="post" action="{% url 'prontuario:comparecimento' consulta.pk %}">{% csrf_token %}<button class="botao secundario" type="submit">Emitir declaração de comparecimento</button></form>
 {% endif %}
+{% if consulta.status == 'realizada' and consulta.paciente %}
+<p><a class="botao secundario" href="{% url 'financeiro:lancar_consulta' consulta.pk %}">Cobrança desta consulta</a></p>
+{% endif %}
 <h2>Avisos enviados</h2>
 <ul class="lista-simples">
 {% for a in avisos %}<li><span>{{ a.get_tipo_display }} · {{ a.destinatario }}</span><span class="etiqueta {% if a.status == 'enviado' %}ok{% elif a.status == 'falhou' %}pendente{% endif %}">{{ a.get_status_display }}</span></li>{% empty %}<li>Nenhum aviso enviado.</li>{% endfor %}
