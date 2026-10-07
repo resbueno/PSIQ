@@ -77,7 +77,7 @@ def test_xlsx_com_datas_e_cpf_numerico_sem_zero_a_esquerda(cena):
     ws = wb.active
     ws.append(["Nome", "CPF", "Nascimento", "Telefone"])
     ws.append(["Ana Souza", int(CPF_C), date(1992, 5, 20), 11988887777])
-    ws.append(["Bia Lima", "01234567890", "20/05/1992", "(21) 97777-6666"])  # CPF invalido de proposito
+    ws.append(["Bia Lima", "01234567891", "20/05/1992", "(21) 97777-6666"])  # CPF invalido de proposito
     buffer = io.BytesIO()
     wb.save(buffer)
     l = lote(cena, SimpleUploadedFile("pacientes.xlsx", buffer.getvalue()))
