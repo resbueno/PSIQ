@@ -80,6 +80,9 @@ def entrar_com_2fa(client, usuario):
     import pyotp
     from django.urls import reverse
 
+    from apps.contas.models import Usuario
+
+    Usuario.objects.filter(pk=usuario.pk).update(ultimo_passo_totp=None)  # varios logins no mesmo intervalo de 30 s
     client.post(reverse("contas:entrar"), {"email": usuario.email, "senha": SENHA})
     client.post(reverse("contas:verificar_2fa"), {"codigo": pyotp.TOTP(usuario.segredo_teste).now()})
 

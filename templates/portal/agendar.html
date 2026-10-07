@@ -5,7 +5,7 @@
 {% if com_aprovacao %}<p>Este horário será um <strong>pedido</strong>: o consultório confirma e avisa você por e-mail.</p>{% else %}<p>Escolha um horário livre. Ele é marcado na hora.</p>{% endif %}
 <form method="get" class="busca">
   <label for="prof">Profissional</label>
-  <select name="profissional" id="prof" onchange="this.form.submit()">{% for p in profissionais %}<option value="{{ p.pk }}" {% if p.pk == escolhido.pk %}selected{% endif %}>{{ p.usuario.nome }}</option>{% endfor %}</select>
+  <select name="profissional" id="prof" data-autosubmit>{% for p in profissionais %}<option value="{{ p.pk }}" {% if p.pk == escolhido.pk %}selected{% endif %}>{{ p.usuario.nome }}</option>{% endfor %}</select>
   <noscript><button class="botao" type="submit">Ver horários</button></noscript>
 </form>
 {% for d in dias %}

@@ -45,6 +45,7 @@ class Usuario(ModeloBase, AbstractBaseUser, PermissionsMixin):
 
     segundo_fator_segredo_cifrado = models.TextField(blank=True)
     segundo_fator_ativo = models.BooleanField(default=False)
+    ultimo_passo_totp = models.BigIntegerField(null=True, blank=True, help_text="Ultimo passo de 30 s aceito (anti-reuso do codigo).")
 
     falhas_login = models.PositiveIntegerField(default=0)
     bloqueado_ate = models.DateTimeField(null=True, blank=True)

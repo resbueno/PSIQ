@@ -15,7 +15,7 @@
   {% if request.pacientes_portal|length > 1 %}
   <form method="post" action="{% url 'portal:trocar_paciente' %}" class="busca">{% csrf_token %}
     <label for="pp">Você está vendo os dados de</label>
-    <select name="paciente" id="pp" onchange="this.form.submit()">{% for p in request.pacientes_portal %}<option value="{{ p.pk }}" {% if p.pk == request.paciente.pk %}selected{% endif %}>{{ p.nome }}</option>{% endfor %}</select>
+    <select name="paciente" id="pp" data-autosubmit>{% for p in request.pacientes_portal %}<option value="{{ p.pk }}" {% if p.pk == request.paciente.pk %}selected{% endif %}>{{ p.nome }}</option>{% endfor %}</select>
     <noscript><button class="botao" type="submit">Trocar</button></noscript>
   </form>
   {% endif %}

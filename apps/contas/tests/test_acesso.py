@@ -73,6 +73,12 @@ def test_ativar_2fa_e_entrar_com_codigo(client, consultorio, criar_usuario):
     assert client.get(reverse("painel")).status_code == 302  # ainda nao autenticado
     errado = client.post(reverse("contas:verificar_2fa"), {"codigo": "000000"})
     assert errado.status_code == 200
+    # o mesmo codigo da ativacao (mesmo passo de 30 s) nao serve para entrar: reuso recusado
+    reuso = client.post(reverse("contas:verificar_2fa"), {"codigo": pyotp.TOTP(segredo).now()})
+    assert reuso.status_code == 200 and client.get(reverse("painel")).status_code == 302
+    from apps.contas.models import Usuario
+
+    Usuario.objects.filter(pk=usuario.pk).update(ultimo_passo_totp=None)  # simula o passo seguinte
     certo = client.post(reverse("contas:verificar_2fa"), {"codigo": pyotp.TOTP(segredo).now()})
     assert certo.status_code == 302
     assert client.get(reverse("painel")).status_code == 200

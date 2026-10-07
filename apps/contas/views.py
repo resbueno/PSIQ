@@ -21,6 +21,7 @@ from apps.core.permissoes import perfil_requerido
 from apps.core.tenancy import contexto
 
 from .forms import CodigoForm, EntrarForm, NovoUsuarioForm
+from . import totp
 from .models import Perfil, Profissional, SessaoDispositivo, Usuario, Vinculo
 
 def _utilizavel():
@@ -80,7 +81,7 @@ def verificar_2fa(request):
         if usuario.bloqueado:
             messages.error(request, "Acesso temporariamente bloqueado. Tente mais tarde.")
             return render(request, "contas/verificar_2fa.html", {"form": form}, status=429)
-        if pyotp.TOTP(usuario.segredo_2fa).verify(form.codigo_limpo(), valid_window=1):
+        if totp.consumir(usuario, form.codigo_limpo()):  # cada codigo vale uma unica vez
             request.session.flush()
             return _concluir_login(request, usuario, segundo_fator=True)
         usuario.registrar_falha_login()
@@ -174,10 +175,12 @@ def configurar_2fa(request):
 
     form = CodigoForm(request.POST or None)
     if request.method == "POST" and form.is_valid():
-        if pyotp.TOTP(segredo).verify(form.codigo_limpo(), valid_window=1):
+        passo = totp.passo_valido(segredo, form.codigo_limpo())
+        if passo is not None:
             usuario.definir_segredo_2fa(segredo)
             usuario.segundo_fator_ativo = True
-            usuario.save(update_fields=["segundo_fator_segredo_cifrado", "segundo_fator_ativo", "atualizado_em"])
+            usuario.ultimo_passo_totp = passo  # o codigo usado na ativacao nao serve para entrar de novo
+            usuario.save(update_fields=["segundo_fator_segredo_cifrado", "segundo_fator_ativo", "ultimo_passo_totp", "atualizado_em"])
             request.session.pop("novo_segredo_2fa", None)
             request.session["segundo_fator_ok"] = True
             auditoria.registrar(request, "2fa_ativado", "usuario", usuario.pk)

@@ -5,7 +5,7 @@
 <form method="get" class="busca">
   {% if pode_escolher %}
     <label for="prof" class="sr">Profissional</label>
-    <select name="profissional" id="prof" onchange="this.form.submit()">
+    <select name="profissional" id="prof" data-autosubmit>
       {% for p in profissionais %}<option value="{{ p.pk }}" {% if p.pk == escolhido.pk %}selected{% endif %}>{{ p.usuario.nome }}</option>{% endfor %}
     </select>
   {% endif %}

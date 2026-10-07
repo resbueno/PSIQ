@@ -1,4 +1,9 @@
 (function () {
+  // Selecao que envia o formulario sozinha (substitui onchange inline, bloqueado pela CSP).
+  document.querySelectorAll('select[data-autosubmit]').forEach(function (campo) {
+    campo.addEventListener('change', function () { campo.form.submit(); });
+  });
+
   if (!('serviceWorker' in navigator)) { return; }
   var meta = document.querySelector('meta[name="sw"]');
   if (!meta) { return; }

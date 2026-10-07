@@ -182,3 +182,22 @@ class SuporteAuditoriaMiddleware:
 
             auditoria.registrar(request, "suporte_requisicao", "suporte", request.suporte.pk, metodo=request.method, caminho=request.path[:150])
         return self.get_response(request)
+
+
+class PoliticaDeConteudoMiddleware:
+    """Content-Security-Policy: scripts so do proprio sistema (sem inline), sem plugins, sem enquadramento por terceiros.
+    Estilos inline continuam permitidos (atributos style). O /admin/ do Django fica de fora: usa scripts inline."""
+
+    POLITICA = (
+        "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; "
+        "connect-src 'self'; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
+    )
+
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        resposta = self.get_response(request)
+        if not request.path_info.startswith("/admin/") and "Content-Security-Policy" not in resposta:
+            resposta["Content-Security-Policy"] = self.POLITICA
+        return resposta
