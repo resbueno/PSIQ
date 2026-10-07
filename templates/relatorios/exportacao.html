@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block titulo %}Exportar dados · PSIQ{% endblock %}
+{% block conteudo %}
+<h1>Exportar dados</h1>
+<p>A exportação nunca é bloqueada, nem em somente leitura nem depois do encerramento do contrato (90 dias para exportar). O arquivo é gerado na hora e não fica guardado no PSIQ.</p>
+{% if pode_consultorio %}
+<h2>Dados do consultório</h2>
+<p>Pacientes, agenda, financeiro, usuários, recibos, declarações e auditoria, em CSV e JSON. Não inclui prontuários: eles pertencem a cada profissional.</p>
+<form method="post" action="{% url 'relatorios:exportar_consultorio' %}">{% csrf_token %}<button class="botao" type="submit">Baixar dados do consultório</button></form>
+{% endif %}
+{% if pode_prontuarios %}
+<h2>Meus prontuários</h2>
+<p>Registros com todas as versões, anexos e documentos, em um arquivo protegido por você. A leitura fica registrada na auditoria.</p>
+<form method="post" action="{% url 'relatorios:exportar_prontuarios' %}">{% csrf_token %}<button class="botao" type="submit">Baixar meus prontuários</button></form>
+{% endif %}
+{% if not pode_consultorio and not pode_prontuarios %}<p>Peça ao administrador do consultório a exportação dos dados.</p>{% endif %}
+{% if historico %}
+<h2>Exportações recentes</h2>
+<ul class="lista-simples">{% for e in historico %}<li><span>{{ e.get_tipo_display }}</span><span class="ajuda">{{ e.criado_em|date:"d/m/Y H:i" }} · {{ e.arquivos }} arquivo(s)</span></li>{% endfor %}</ul>
+{% endif %}
+{% endblock %}

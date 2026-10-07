@@ -29,6 +29,7 @@ INSTALLED_APPS = [
     "apps.portal",
     "apps.calendarios",
     "apps.operador",
+    "apps.relatorios",
 ]
 
 MIDDLEWARE = [

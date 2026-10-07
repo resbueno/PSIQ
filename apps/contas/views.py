@@ -1,4 +1,5 @@
 import io
+from datetime import timedelta
 
 import pyotp
 import qrcode
@@ -9,6 +10,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.sessions.backends.db import SessionStore
 from django.db import transaction
+from django.db.models import Q
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.views.decorators.http import require_POST
@@ -20,6 +22,11 @@ from apps.core.tenancy import contexto
 
 from .forms import CodigoForm, EntrarForm, NovoUsuarioForm
 from .models import Perfil, Profissional, SessaoDispositivo, Usuario, Vinculo
+
+def _utilizavel():
+    """Consultorios ativos, e os encerrados ainda dentro dos 90 dias de exportacao."""
+    return Q(~Q(consultorio__status="encerrado") | Q(consultorio__encerrado_em__gte=timezone.now() - timedelta(days=90)))
+
 
 PRE_2FA = "pre_2fa_usuario_id"
 MENSAGEM_LOGIN_INVALIDO = "E-mail ou senha incorretos, ou acesso temporariamente bloqueado."
@@ -96,7 +103,7 @@ def _concluir_login(request, usuario, segundo_fator):
     )
 
     with contexto(usuario_id=usuario.pk):
-        vinculos = list(Vinculo.objects.filter(usuario=usuario, ativo=True).exclude(consultorio__status="encerrado"))
+        vinculos = list(Vinculo.objects.filter(usuario=usuario, ativo=True).filter(_utilizavel()))
 
     if len(vinculos) == 1:
         consultorio_id = vinculos[0].consultorio_id
@@ -125,7 +132,7 @@ def escolher_consultorio(request):
     vinculos = list(
         Vinculo.objects.select_related("consultorio")
         .filter(usuario=request.user, ativo=True)
-        .exclude(consultorio__status="encerrado")
+        .filter(_utilizavel())
         .order_by("consultorio__nome")
     )
     if request.method == "POST":

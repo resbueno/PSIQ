@@ -41,6 +41,19 @@ class Consultorio(ModeloBase):
     def somente_leitura(self):
         return self.status == self.Status.SOMENTE_LEITURA
 
+    @property
+    def dentro_do_prazo_de_exportacao(self):
+        """Apos o encerramento do contrato: 90 dias para exportar os dados."""
+        from datetime import timedelta
+
+        from django.utils import timezone
+
+        return self.status == self.Status.ENCERRADO and self.encerrado_em is not None and timezone.now() < self.encerrado_em + timedelta(days=90)
+
+    @property
+    def utilizavel(self):
+        return self.status != self.Status.ENCERRADO or self.dentro_do_prazo_de_exportacao
+
 
 class Contrato(ModeloBase):
     class Tipo(models.TextChoices):

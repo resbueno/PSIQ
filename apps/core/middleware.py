@@ -78,7 +78,7 @@ class ContextoConsultorioMiddleware:
                         .filter(usuario=usuario, consultorio_id=consultorio_id, ativo=True)
                         .first()
                     )
-                    if vinculo and vinculo.consultorio.status != Consultorio.Status.ENCERRADO:
+                    if vinculo and vinculo.consultorio.utilizavel:
                         request.vinculo = vinculo
                         request.consultorio = vinculo.consultorio
                         timezone.activate(ZoneInfo(vinculo.consultorio.fuso))
@@ -125,12 +125,15 @@ class SomenteLeituraMiddleware:
     """Consultorio inadimplente apos a carencia: ve e exporta, nao cria nem altera."""
 
     LIVRES = ("/sair/", "/conta/", "/exportacao/", "/admin/", "/operador/suporte/sair/")
+    SO_EXPORTACAO = ("/exportacao/", "/sair/", "/conta/", "/static/", "/admin/")
 
     def __init__(self, get_response):
         self.get_response = get_response
 
     def __call__(self, request):
         consultorio = getattr(request, "consultorio", None)
+        if consultorio and consultorio.status == Consultorio.Status.ENCERRADO and not request.path.startswith(self.SO_EXPORTACAO):
+            return redirect("relatorios:exportacao")
         if getattr(request, "suporte", None) and request.method not in METODOS_SEGUROS and not request.path.startswith(self.LIVRES):
             return HttpResponseForbidden("O acesso de suporte é somente leitura.")
         if (

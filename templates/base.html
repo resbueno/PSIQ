@@ -29,6 +29,8 @@
         {% if perfil_ativo == 'profissional' %}<a href="{% url 'calendarios:lista' %}">Calendários</a>{% endif %}
         <a href="{% url 'financeiro:lancamentos' %}">Financeiro</a>
         <a href="{% url 'financeiro:repasses' %}">Repasses</a>
+        <a href="{% url 'relatorios:indice' %}">Relatórios</a>
+        <a href="{% url 'relatorios:exportacao' %}">Exportar dados</a>
         <a href="{% url 'portal:lgpd_lista' %}">Pedidos de pacientes</a>
         {% if perfil_ativo != 'profissional' %}<a href="{% url 'financeiro:convenio' %}">Convênios (fila)</a>{% endif %}
       {% endif %}
