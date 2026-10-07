@@ -11,7 +11,7 @@ A especificação fica na pasta `docs/`, mantida só localmente (fora do Git).
 | 1 | Base: consultórios, usuários, perfis, login + 2FA, dispositivos, auditoria, RLS | Pronta, testes verdes no CI |
 | 2 | Pacientes e agenda, com avisos por e-mail | Pronta, testes verdes no CI (push, FullCalendar e HTMX pendentes) |
 | 3 | Prontuário e documentos | Pronta, testes verdes no CI |
-| 4 | Financeiro, convênio e repasse | A fazer |
+| 4 | Financeiro, convênio e repasse | Pronta, testes verdes no CI |
 | 5 | Portal do paciente, teleconsulta, calendários | A fazer |
 | 6 | Painel interno, cobrança, relatórios, importação | A fazer |
 
@@ -101,3 +101,16 @@ Pendente da Etapa 2: aviso por push (PWA), mensagem ao recusar solicitação, Fu
 - **Delegação:** o admin troca o dono de um prontuário (saída de profissional) sem ver o conteúdo; a troca fica registrada e o novo dono lê as versões antigas.
 
 Pendente da Etapa 3: busca por texto (decisão futura, por causa da cifra), assinatura digital (fora de escopo), pedido de exclusão vindo do portal (Etapa 5) e backend S3 para anexos.
+
+## Etapa 4: financeiro, convênio e repasse
+
+O PSIQ registra e calcula; não movimenta dinheiro, não emite NFS-e e não cobra (docs/01, RF-37).
+
+- **Cobrança automática:** ao marcar uma consulta como realizada, cria o lançamento com o valor da tabela do profissional (particular, ou da operadora se o convênio do paciente casa com um convênio ativo; primeira consulta pode ter valor próprio). Sem valor configurado não inventa cobrança; a tela da consulta oferece "Cobrança desta consulta". Cancelamento tardio só cobra se o consultório optou (`cobra_falta_tardia`).
+- **Pagamento e recibo:** forma e data do pagamento; recibo em PDF com numeração sequencial por consultório, em nome do pagador (ou do paciente), com CPF (campos do Receita Saúde), cifrado em repouso; registro do número da nota fiscal emitida fora.
+- **Convênio:** fila realizado → faturado → pago ou glosado. Retorno da operadora com valor recebido: total vira pago; parcial vira pago com glosa e motivo obrigatório; zero vira glosado.
+- **Repasse:** regras do admin por profissional (percentual ou valor fixo; padrão, particular, convênio ou primeira consulta, a mais específica vence). O repasse nasce quando o dinheiro entra e usa o que de fato entrou (glosa reduz); valor fixo nunca passa do recebido; aluguel de sala não gera repasse. O admin marca como pago; pagamento desfeito remove o repasse a pagar, mas é bloqueado se o repasse já foi pago ou há recibo.
+- **Aluguel de sala:** cobrança recorrente mensal; `python manage.py gerar_cobrancas_recorrentes` (pode rodar todo dia, não duplica).
+- **Permissões:** profissional vê só os próprios lançamentos e repasses (somente leitura); assistente opera pagamentos, recibos e a fila de convênios; admin tem tudo, incluindo valores, regras, convênios e pagamento de repasse.
+
+Pendente da Etapa 4: relatórios financeiros (Etapa 6), lançamento de consultas em grupo (hoje manual) e vínculo do paciente ao convênio por cadastro (hoje por nome).
