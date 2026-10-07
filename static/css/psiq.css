@@ -120,3 +120,12 @@ th { font-weight: 600; color: var(--tinta-suave); font-size: .9rem; }
 .acoes form { margin: 0; }
 .texto-clinico { background: var(--superficie); border: 1px solid var(--linha); padding: 1rem 1.25rem; max-width: 46rem; }
 textarea { width: 100%; padding: .65rem .75rem; border: 1px solid #9db0ae; border-radius: 4px; font: inherit; background: var(--superficie); color: inherit; }
+
+/* Portal do paciente */
+.portal-topo { display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; justify-content: space-between; padding: .9rem clamp(1rem, 4vw, 3rem); background: var(--tinta); color: #e7efee; }
+.portal-topo a { color: #e7efee; text-decoration: none; padding: .35rem .6rem; }
+.portal-topo a:hover { background: rgba(255, 255, 255, .12); }
+.portal-topo .botao.secundario { color: #e7efee; border-color: #8fb0ac; }
+.portal-marca { font-family: var(--fonte-titulo); font-size: 1.3rem; }
+.portal-topo nav { display: flex; flex-wrap: wrap; gap: .25rem; }
+.portal-conteudo { padding: 2rem clamp(1rem, 4vw, 3rem); max-width: 52rem; }

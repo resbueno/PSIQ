@@ -1,0 +1,17 @@
+{% extends "portal/base.html" %}
+{% block titulo %}Seus compromissos{% endblock %}
+{% block portal %}
+<h1>Olá, {{ request.paciente.nome|truncatewords:1 }}</h1>
+<h2>Próximos compromissos</h2>
+{% for c in proximas %}
+<div class="compromisso status-{{ c.status }}">
+  <strong>{{ c.inicio|date:"d/m/Y H:i" }}</strong> · {{ c.profissional.usuario.nome }} <span class="etiqueta">{{ c.get_status_display }}</span>
+  {% if c.link_online and c.inicio <= sala_a_partir_de %}<p><a class="botao" href="{{ c.link_online }}" target="_blank" rel="noopener">Entrar na sala</a></p>{% elif c.link_online %}<p class="ajuda">A sala abre 15 minutos antes do horário.</p>{% endif %}
+  <div class="acoes">
+    {% if c.status == 'agendada' %}<form method="post" action="{% url 'portal:consulta_acao' c.pk %}">{% csrf_token %}<input type="hidden" name="acao" value="confirmar"><button class="botao" type="submit">Confirmar presença</button></form>{% endif %}
+    <form method="post" action="{% url 'portal:consulta_acao' c.pk %}">{% csrf_token %}<input type="hidden" name="acao" value="cancelar"><button class="botao secundario" type="submit">Cancelar</button></form>
+  </div>
+</div>
+{% empty %}<p class="ajuda">Você não tem compromissos marcados. <a href="{% url 'portal:agendar' %}">Marcar um horário</a></p>{% endfor %}
+{% if pendentes %}<h2>Pedidos aguardando o consultório</h2><ul class="lista-simples">{% for s in pendentes %}<li>{{ s.horario_desejado|date:"d/m/Y H:i" }}<span class="etiqueta pendente">Aguardando</span></li>{% endfor %}</ul>{% endif %}
+{% endblock %}

@@ -1,0 +1,8 @@
+{% extends "portal/base.html" %}
+{% block titulo %}Documentos{% endblock %}
+{% block portal %}
+<h1>Documentos</h1>
+<ul class="lista-simples">
+{% for d in documentos %}<li><a href="{% url 'portal:documento' d.pk %}">{{ d.titulo }}</a><span class="ajuda">{{ d.criado_em|date:"d/m/Y" }}</span></li>{% empty %}<li>Nenhum documento disponível. Documentos liberados pelo profissional aparecem aqui.</li>{% endfor %}
+</ul>
+{% endblock %}

@@ -1,0 +1,21 @@
+{% extends "portal/base.html" %}
+{% block titulo %}Marcar horário{% endblock %}
+{% block portal %}
+<h1>Marcar horário</h1>
+{% if com_aprovacao %}<p>Este horário será um <strong>pedido</strong>: o consultório confirma e avisa você por e-mail.</p>{% else %}<p>Escolha um horário livre. Ele é marcado na hora.</p>{% endif %}
+<form method="get" class="busca">
+  <label for="prof">Profissional</label>
+  <select name="profissional" id="prof" onchange="this.form.submit()">{% for p in profissionais %}<option value="{{ p.pk }}" {% if p.pk == escolhido.pk %}selected{% endif %}>{{ p.usuario.nome }}</option>{% endfor %}</select>
+  <noscript><button class="botao" type="submit">Ver horários</button></noscript>
+</form>
+{% for d in dias %}
+  <h2>{{ d.data|date:"l, d/m" }}</h2>
+  <div class="acoes">
+  {% for h in d.horarios %}
+    <form method="post">{% csrf_token %}<input type="hidden" name="profissional" value="{{ escolhido.pk }}"><input type="hidden" name="inicio" value="{{ h|date:'c' }}">
+      <select name="tipo" aria-label="Tipo de atendimento">{% for v, rotulo in tipos %}<option value="{{ v }}">{{ rotulo }}</option>{% endfor %}</select>
+      <button class="botao secundario" type="submit">{{ h|date:"H:i" }}</button></form>
+  {% endfor %}
+  </div>
+{% empty %}<p class="ajuda">Não há horários livres nos próximos 14 dias para este profissional. Fale com o consultório.</p>{% endfor %}
+{% endblock %}

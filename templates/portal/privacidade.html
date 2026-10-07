@@ -1,0 +1,21 @@
+{% extends "portal/base.html" %}
+{% block titulo %}Privacidade{% endblock %}
+{% block portal %}
+<h1>Privacidade</h1>
+<h2>Quem abriu seu prontuário</h2>
+<ul class="lista-simples">
+{% for a in acessos %}<li><span>{{ a.quem }}</span><span class="ajuda">{{ a.quando|date:"d/m/Y H:i" }}</span></li>{% empty %}<li>Nenhum acesso registrado.</li>{% endfor %}
+</ul>
+<h2>Autorizações de compartilhamento</h2>
+<ul class="lista-simples">
+{% for c in consentimentos %}<li><span>{{ c.profissional_destino.usuario.nome }} pode ler o prontuário de {{ c.profissional_origem.usuario.nome }}</span>
+  <form method="post" action="{% url 'portal:revogar_consentimento' c.pk %}">{% csrf_token %}<button class="botao secundario" type="submit">Revogar</button></form></li>{% empty %}<li>Nenhuma autorização ativa.</li>{% endfor %}
+</ul>
+<h2>Seus direitos sobre os dados</h2>
+<form method="post" class="campos" novalidate>{% csrf_token %}
+  {% include "_campos.html" %}
+  <button class="botao" type="submit">Enviar pedido</button>
+</form>
+<ul class="lista-simples">{% for p in pedidos %}<li><span>{{ p.get_tipo_display }} · {{ p.criado_em|date:"d/m/Y" }}</span><span class="etiqueta {% if p.status == 'atendida' %}ok{% else %}pendente{% endif %}">{{ p.get_status_display }}</span></li>{% endfor %}</ul>
+<p class="ajuda">Prontuários têm prazo legal de guarda; o consultório explica o que pode ser apagado.</p>
+{% endblock %}

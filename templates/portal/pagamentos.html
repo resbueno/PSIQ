@@ -1,0 +1,14 @@
+{% extends "portal/base.html" %}
+{% block titulo %}Pagamentos{% endblock %}
+{% block portal %}
+<h1>Pagamentos</h1>
+<div class="tabela-rolagem"><table>
+  <thead><tr><th>Vencimento</th><th>Valor</th><th>Situação</th><th>Recibo</th></tr></thead>
+  <tbody>
+  {% for l in lancamentos %}<tr><td>{{ l.vencimento|date:"d/m/Y" }}</td><td>R$ {{ l.valor }}</td>
+    <td><span class="etiqueta {% if l.status == 'pago' %}ok{% elif l.atrasado %}pendente{% endif %}">{% if l.atrasado %}Atrasado{% else %}{{ l.get_status_display }}{% endif %}</span></td>
+    <td>{% if l.recibo %}<a href="{% url 'portal:recibo' l.recibo.pk %}">Baixar recibo</a>{% else %}—{% endif %}</td></tr>
+  {% empty %}<tr><td colspan="4">Nenhum pagamento registrado.</td></tr>{% endfor %}
+  </tbody></table></div>
+<p class="ajuda">Os pagamentos são combinados diretamente com o consultório. Este portal só mostra o registro.</p>
+{% endblock %}

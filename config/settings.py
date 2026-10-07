@@ -26,6 +26,7 @@ INSTALLED_APPS = [
     "apps.agenda",
     "apps.prontuario",
     "apps.financeiro",
+    "apps.portal",
 ]
 
 MIDDLEWARE = [
@@ -147,3 +148,9 @@ PSIQ_ANEXOS_DIR = env("PSIQ_ANEXOS_DIR", default=str(BASE_DIR / "armazenamento")
 PSIQ_ANEXO_MAX_BYTES = 10 * 1024 * 1024
 PSIQ_ANEXO_EXTENSOES = ("pdf", "png", "jpg", "jpeg", "txt", "doc", "docx")
 PSIQ_INATIVIDADE_PRONTUARIO_SEGUNDOS = env.int("PSIQ_INATIVIDADE_PRONTUARIO_SEGUNDOS", default=900)
+
+# Portal do paciente
+PSIQ_PORTAL_CODIGO_VALIDADE_MINUTOS = 10
+PSIQ_PORTAL_MAX_TENTATIVAS = 5
+PSIQ_PORTAL_MAX_CODIGOS_POR_HORA = 5
+PSIQ_PORTAL_IDADE_MINIMA_ACESSO_PROPRIO = 16

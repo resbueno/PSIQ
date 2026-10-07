@@ -1,0 +1,10 @@
+{% extends "entrada_base.html" %}
+{% block titulo %}Portal do paciente · {{ consultorio.nome }}{% endblock %}
+{% block formulario %}
+<h1>Portal do paciente</h1>
+<p>{{ consultorio.nome }}. Digite o e-mail que você informou ao consultório e enviaremos um código de acesso. Não precisa de senha.</p>
+<form method="post" class="campos" novalidate>{% csrf_token %}
+  {% include "_campos.html" %}
+  <button class="botao" type="submit">Receber código</button>
+</form>
+{% endblock %}

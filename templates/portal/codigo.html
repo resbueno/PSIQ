@@ -1,0 +1,11 @@
+{% extends "entrada_base.html" %}
+{% block titulo %}Código de acesso · {{ consultorio.nome }}{% endblock %}
+{% block formulario %}
+<h1>Digite o código</h1>
+<p>Enviamos um código de 6 dígitos para {{ email }}, se esse e-mail estiver cadastrado.</p>
+<form method="post" class="campos" novalidate>{% csrf_token %}
+  {% include "_campos.html" %}
+  <button class="botao" type="submit">Entrar</button>
+</form>
+<p class="ajuda"><a href="{% url 'portal:entrar' consultorio.pk %}">Pedir outro código</a></p>
+{% endblock %}

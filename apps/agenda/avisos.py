@@ -108,6 +108,7 @@ def montar_mensagem(consulta, tipo, destinatario):
         if consulta.link_online:
             linhas += ["", f"Acesse no horário combinado: {consulta.link_online}"]
         linhas += ["", f"Para confirmar ou cancelar: {link_acao(consulta, destinatario['paciente'])}"]
+        linhas += [f"Seu portal: {settings.PSIQ_URL_BASE.rstrip('/')}/portal/{consulta.consultorio_id}/entrar/"]
     linhas += ["", consulta.consultorio.nome]
     return f"Aviso de {consulta.consultorio.nome}", "\n".join(linhas)
 

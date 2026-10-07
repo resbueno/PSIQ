@@ -1,0 +1,6 @@
+{% extends "entrada_base.html" %}
+{% block titulo %}Portal do paciente{% endblock %}
+{% block formulario %}
+<h1>{% if saiu %}Você saiu{% else %}Acesse pelo link do consultório{% endif %}</h1>
+<p>{% if saiu %}Sua sessão foi encerrada.{% else %}Para entrar no portal, use o link enviado pelo consultório por e-mail. Ele leva à página de acesso com código.{% endif %}</p>
+{% endblock %}
