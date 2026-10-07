@@ -1,6 +1,6 @@
 {% load static %}{
-  "name": "PSIQ",
-  "short_name": "PSIQ",
+  "name": "MeuPSIQ",
+  "short_name": "MeuPSIQ",
   "description": "Agenda, pacientes, financeiro e prontuário para psicologia e psiquiatria.",
   "lang": "pt-BR",
   "start_url": "{% url 'painel' %}",

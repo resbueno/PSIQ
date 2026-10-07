@@ -72,9 +72,9 @@ class Usuario(ModeloBase, AbstractBaseUser, PermissionsMixin):
 
     def registrar_falha_login(self):
         self.falhas_login += 1
-        excesso = self.falhas_login - settings.PSIQ_LOGIN_FALHAS_ANTES_DO_BLOQUEIO
+        excesso = self.falhas_login - settings.MEUPSIQ_LOGIN_FALHAS_ANTES_DO_BLOQUEIO
         if excesso >= 0:
-            minutos = min(2**excesso, settings.PSIQ_LOGIN_BLOQUEIO_MAXIMO_MINUTOS)
+            minutos = min(2**excesso, settings.MEUPSIQ_LOGIN_BLOQUEIO_MAXIMO_MINUTOS)
             self.bloqueado_ate = timezone.now() + timedelta(minutes=minutos)
         self.save(update_fields=["falhas_login", "bloqueado_ate", "atualizado_em"])
 

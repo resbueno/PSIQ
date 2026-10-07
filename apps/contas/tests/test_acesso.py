@@ -41,7 +41,7 @@ def test_senha_errada_nao_entra_e_audita(client, consultorio, criar_usuario):
 
 def test_bloqueio_progressivo_apos_falhas(client, consultorio, criar_usuario, settings):
     usuario = criar_usuario("sec@exemplo.com", consultorio)
-    for _ in range(settings.PSIQ_LOGIN_FALHAS_ANTES_DO_BLOQUEIO):
+    for _ in range(settings.MEUPSIQ_LOGIN_FALHAS_ANTES_DO_BLOQUEIO):
         entrar(client, "sec@exemplo.com", "errada")
     usuario.refresh_from_db()
     assert usuario.bloqueado
@@ -175,3 +175,39 @@ def test_usuario_com_dois_consultorios_escolhe_um(client, consultorio, criar_con
     # consultorio que nao e dele e recusado
     client.post(reverse("contas:escolher_consultorio"), {"consultorio_id": "00000000-0000-0000-0000-000000000000"})
     assert client.get(reverse("contas:usuarios")).status_code == 200
+
+
+# --------------------------------------------------------------------------- login pelo link do consultorio
+
+
+def entrar_pelo_link(client, slug, email, senha=SENHA):
+    return client.post(reverse("entrar_consultorio", kwargs={"slug": slug}), {"email": email, "senha": senha})
+
+
+def test_login_pelo_link_do_consultorio_ja_entra_naquele_consultorio_sem_escolher(client, consultorio, criar_consultorio, criar_usuario):
+    outro = criar_consultorio("Segunda Clínica")
+    usuario = criar_usuario("multi@exemplo.com", consultorio, Perfil.ASSISTENTE)
+    with contexto(consultorio_id=outro.pk, usuario_id=usuario.pk):
+        Vinculo.objects.create(usuario=usuario, consultorio=outro, perfil=Perfil.ADMIN)
+
+    resposta = entrar_pelo_link(client, outro.slug, "multi@exemplo.com")
+    assert resposta.status_code == 302 and resposta.url == reverse("painel")
+    assert client.session["consultorio_id"] == str(outro.pk)
+
+
+def test_login_pelo_link_recusa_quem_nao_tem_vinculo_naquele_consultorio(client, consultorio, criar_consultorio, criar_usuario):
+    outro = criar_consultorio("Segunda Clínica")
+    criar_usuario("so-na-primeira@exemplo.com", consultorio, Perfil.ASSISTENTE)
+    resposta = entrar_pelo_link(client, outro.slug, "so-na-primeira@exemplo.com")
+    assert resposta.status_code == 401
+    assert not client.session.get("_auth_user_id")
+
+
+def test_login_pelo_link_com_2fa_continua_no_mesmo_consultorio(client, consultorio, criar_usuario):
+    usuario = criar_usuario("dra@exemplo.com", consultorio, Perfil.PROFISSIONAL, com_2fa=True)
+    segredo = usuario.segredo_teste
+
+    client.post(reverse("entrar_consultorio", kwargs={"slug": consultorio.slug}), {"email": "dra@exemplo.com", "senha": SENHA})
+    resposta = client.post(reverse("contas:verificar_2fa"), {"codigo": pyotp.TOTP(segredo).now()})
+    assert resposta.status_code == 302 and resposta.url == reverse("painel")
+    assert client.session["consultorio_id"] == str(consultorio.pk)

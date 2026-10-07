@@ -7,7 +7,7 @@
   if (!('serviceWorker' in navigator)) { return; }
   var meta = document.querySelector('meta[name="sw"]');
   if (!meta) { return; }
-  // O endereco vem do servidor, que conhece o prefixo da instalacao (ex.: /psiq/).
+  // O endereco vem do servidor, que conhece o prefixo da instalacao (ex.: /meupsiq/).
   navigator.serviceWorker.register(meta.content, { scope: meta.content.replace(/sw\.js$/, '') }).catch(function () {});
 
   var botao = document.getElementById('ativar-push');

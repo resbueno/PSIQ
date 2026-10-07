@@ -1,8 +1,8 @@
 {% extends "entrada_base.html" %}
-{% block titulo %}Verificação em duas etapas · PSIQ{% endblock %}
+{% block titulo %}Verificação em duas etapas · MeuPSIQ{% endblock %}
 {% block formulario %}
 <h1>Código de verificação</h1>
-<p>Abra o aplicativo autenticador e digite o código de 6 dígitos do PSIQ.</p>
+<p>Abra o aplicativo autenticador e digite o código de 6 dígitos do MeuPSIQ.</p>
 <form method="post" class="campos" novalidate>{% csrf_token %}
   <div>
     <label for="{{ form.codigo.id_for_label }}">{{ form.codigo.label }}</label>

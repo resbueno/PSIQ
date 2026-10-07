@@ -110,7 +110,7 @@ def test_consulta_vai_ao_calendario_so_com_titulo_neutro(cena, falso):
     (evento,) = falso.eventos.values()
     assert evento["titulo"] == "Consulta" and "Maria" not in evento["titulo"]
     assert evento["inicio"] == consulta.inicio
-    registro = EventoExterno.objects.get(origem="psiq")
+    registro = EventoExterno.objects.get(origem="meupsiq")
     assert registro.consulta_id == consulta.pk and cena.conta.ultima_sincronizacao and cena.conta.ultimo_erro == ""
 
 
@@ -134,14 +134,14 @@ def test_remarcar_atualiza_e_cancelar_apaga_o_evento_externo(cena, falso):
     assert len(falso.eventos) == 1 and next(iter(falso.eventos.values()))["inicio"] == consulta.inicio
     agenda.cancelar(cena.req(), consulta, "equipe")
     sync.sincronizar(cena.conta)
-    assert falso.eventos == {} and not EventoExterno.objects.filter(origem="psiq").exists()
+    assert falso.eventos == {} and not EventoExterno.objects.filter(origem="meupsiq").exists()
 
 
 def test_sincronizar_duas_vezes_nao_duplica(cena, falso):
     marcar(cena)
     sync.sincronizar(cena.conta)
     sync.sincronizar(cena.conta)
-    assert len(falso.eventos) == 1 and EventoExterno.objects.filter(origem="psiq").count() == 1
+    assert len(falso.eventos) == 1 and EventoExterno.objects.filter(origem="meupsiq").count() == 1
 
 
 # --------------------------------------------------------------------------- importacao e bloqueio
@@ -322,7 +322,7 @@ def resposta(json=None, status=200):
 
 
 def test_google_monta_as_chamadas_e_ignora_dia_inteiro_e_cancelados(settings):
-    settings.PSIQ_GOOGLE_CLIENT_ID, settings.PSIQ_GOOGLE_CLIENT_SECRET = "id", "segredo"
+    settings.MEUPSIQ_GOOGLE_CLIENT_ID, settings.MEUPSIQ_GOOGLE_CLIENT_SECRET = "id", "segredo"
     google = provedores.Google()
     url = google.url_autorizacao("S", "https://x/retorno")
     consulta = parse_qs(urlparse(url).query)
@@ -346,7 +346,7 @@ def test_google_monta_as_chamadas_e_ignora_dia_inteiro_e_cancelados(settings):
 
 
 def test_microsoft_monta_as_chamadas_e_ignora_livre_e_cancelado(settings):
-    settings.PSIQ_MICROSOFT_CLIENT_ID, settings.PSIQ_MICROSOFT_CLIENT_SECRET = "id", "segredo"
+    settings.MEUPSIQ_MICROSOFT_CLIENT_ID, settings.MEUPSIQ_MICROSOFT_CLIENT_SECRET = "id", "segredo"
     ms = provedores.Microsoft()
     assert "offline_access" in parse_qs(urlparse(ms.url_autorizacao("S", "https://x/r")).query)["scope"][0]
     itens = {"value": [

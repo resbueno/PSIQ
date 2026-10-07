@@ -50,6 +50,24 @@ def _consultorio_ativo(pk):
     return get_object_or_404(Consultorio.objects.exclude(status=Consultorio.Status.ENCERRADO), pk=pk)
 
 
+def _consultorio_do_slug(slug):
+    return get_object_or_404(Consultorio.objects.exclude(status=Consultorio.Status.ENCERRADO), slug=slug)
+
+
+class PreCadastroForm(forms.Form):
+    nome = forms.CharField(label="Nome completo", max_length=160, widget=forms.TextInput(attrs={"autocomplete": "name"}))
+    email = forms.EmailField(label="E-mail", widget=forms.EmailInput(attrs={"autocomplete": "email"}))
+    telefone = forms.CharField(label="Telefone (com DDD)", max_length=20, widget=forms.TextInput(attrs={"autocomplete": "tel"}))
+    nascimento = forms.DateField(label="Data de nascimento", required=False, widget=forms.DateInput(attrs={"type": "date"}))
+    # Campo isca: invisivel para gente, atraente para robo. Se vier preenchido, e automacao.
+    site = forms.CharField(label="Site", required=False, widget=forms.TextInput(attrs={"class": "campo-isca", "tabindex": "-1", "autocomplete": "off"}))
+
+    def clean_site(self):
+        if self.cleaned_data.get("site"):
+            raise forms.ValidationError("Não foi possível enviar o formulário.")
+        return ""
+
+
 def portal_logado(view):
     """Exige sessao do portal; define o consultorio no banco (RLS), o paciente atual e o fuso do consultorio."""
 
@@ -142,7 +160,7 @@ def home(request):
         "proximas": consultas.filter(inicio__gte=agora, status__in=Consulta.ATIVAS),
         "pendentes": SolicitacaoHorario.objects.filter(paciente=request.paciente, status=SolicitacaoHorario.Status.PENDENTE),
         "agora": agora, "sala_a_partir_de": agora + timedelta(minutes=15),
-        "vapid_public": settings.PSIQ_VAPID_PUBLIC_KEY,
+        "vapid_public": settings.MEUPSIQ_VAPID_PUBLIC_KEY,
     })
 
 
@@ -212,6 +230,62 @@ def agendar(request):
         "profissionais": profissionais, "escolhido": escolhido, "dias": _slots(request, escolhido) if escolhido else [],
         "com_aprovacao": bool(escolhido) and agenda.exige_aprovacao(request.paciente, escolhido), "tipos": TipoAtendimento.choices,
     })
+
+
+# --------------------------------------------------------------------------- agendamento publico (sem login)
+
+
+@never_cache
+def publico_agenda(request, slug):
+    """Link público do consultório (/<slug>/agenda/): quem ainda não é paciente escolhe um horário e faz
+    um pré-cadastro. Vira sempre um pedido (nunca marca na hora), que a equipe confirma ou recusa."""
+    consultorio = _consultorio_do_slug(slug)
+    with contexto(consultorio_id=consultorio.pk):
+        request.consultorio = consultorio
+        profissionais = list(agenda.profissionais_do_consultorio(consultorio))
+        candidato = request.GET.get("profissional") or request.POST.get("profissional")
+        escolhido = next((p for p in profissionais if str(p.pk) == candidato), None) or (profissionais[0] if profissionais else None)
+
+        form = PreCadastroForm(request.POST or None)
+        if request.method == "POST" and escolhido:
+            try:
+                inicio = datetime.fromisoformat(request.POST.get("inicio", ""))
+            except ValueError:
+                inicio = None
+            fuso = ZoneInfo(consultorio.fuso)
+            livres = set(agenda.horarios_livres(consultorio, escolhido, inicio.astimezone(fuso).date())) if inicio and inicio.tzinfo else set()
+            if inicio is None or inicio not in livres:
+                messages.error(request, "Esse horário não está mais disponível. Escolha outro.")
+                return redirect(f"{request.path}?profissional={escolhido.pk}")
+            if form.is_valid():
+                email = form.cleaned_data["email"].strip().lower()
+                if servico.pedido_publico_excedido(consultorio, email):
+                    messages.error(request, "Muitos pedidos com este e-mail na última hora. Tente novamente mais tarde ou fale com o consultório.")
+                    return redirect(f"{request.path}?profissional={escolhido.pk}")
+                tipo = request.POST.get("tipo") if request.POST.get("tipo") in TipoAtendimento.values else TipoAtendimento.PRESENCIAL
+                paciente = servico.paciente_para_agendamento_publico(
+                    consultorio, nome=form.cleaned_data["nome"], email=email, telefone=form.cleaned_data["telefone"],
+                    nascimento=form.cleaned_data.get("nascimento"),
+                )
+                try:
+                    agenda.criar_solicitacao(
+                        request, paciente=paciente, profissional=escolhido, horario=inicio, tipo=tipo,
+                        observacao="Pedido feito pelo link público de agendamento.",
+                    )
+                except ErroAgenda as erro:
+                    messages.error(request, str(erro))
+                    return redirect(f"{request.path}?profissional={escolhido.pk}")
+                auditoria.registrar(
+                    request, "agendamento_publico_solicitado", "paciente", paciente.pk,
+                    consultorio_id=consultorio.pk, email=email,
+                )
+                messages.success(request, "Pedido enviado! O consultório vai confirmar por e-mail.")
+                return redirect("publico_agenda", slug=slug)
+
+        return render(request, "portal/publico_agenda.html", {
+            "consultorio": consultorio, "profissionais": profissionais, "escolhido": escolhido,
+            "dias": _slots(request, escolhido) if escolhido else [], "tipos": TipoAtendimento.choices, "form": form,
+        })
 
 
 # --------------------------------------------------------------------------- pagamentos e documentos

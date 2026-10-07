@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block titulo %}Prontuário · PSIQ{% endblock %}
+{% block titulo %}Prontuário · MeuPSIQ{% endblock %}
 {% block conteudo %}
 <h1>Prontuário de {% if prontuario.paciente %}{{ prontuario.paciente.nome }}{% else %}{{ prontuario.grupo.nome }}{% endif %}</h1>
 <p class="ajuda">Dono: {{ prontuario.profissional.usuario.nome }} · guarda obrigatória até {{ prazo|date:"d/m/Y" }}{% if not eh_dono %} · você tem acesso somente leitura{% endif %}</p>

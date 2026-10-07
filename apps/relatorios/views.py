@@ -87,7 +87,7 @@ def _zip_resposta(dados, nome):
 @perfil_requerido(Perfil.ADMIN)
 @require_POST
 def exportar_consultorio(request):
-    return _zip_resposta(exportacao.gerar_zip_consultorio(request), f"psiq-dados-{date.today():%Y%m%d}.zip")
+    return _zip_resposta(exportacao.gerar_zip_consultorio(request), f"meupsiq-dados-{date.today():%Y%m%d}.zip")
 
 
 @perfil_requerido(Perfil.PROFISSIONAL)
@@ -96,4 +96,4 @@ def exportar_prontuarios(request):
     if not request.user.segundo_fator_ativo:  # leitura em massa de prontuarios exige 2FA
         messages.warning(request, "Ative a verificação em duas etapas para exportar prontuários.")
         return redirect("contas:configurar_2fa")
-    return _zip_resposta(exportacao.gerar_zip_prontuarios(request, request.user.profissional), f"psiq-prontuarios-{date.today():%Y%m%d}.zip")
+    return _zip_resposta(exportacao.gerar_zip_prontuarios(request, request.user.profissional), f"meupsiq-prontuarios-{date.today():%Y%m%d}.zip")

@@ -1,4 +1,4 @@
-# Operação do PSIQ
+# Operação do MeuPSIQ
 
 Tarefas agendadas (cron do host ou `docker compose exec app ...`):
 
@@ -14,14 +14,14 @@ Tarefas agendadas (cron do host ou `docker compose exec app ...`):
 ## Backup (docs/02, seção 5)
 
 - PostgreSQL com arquivamento contínuo de WAL (pgBackRest ou Barman) e snapshot diário da VPS. Metas: RPO 5 min, RTO 4 h.
-- Anexos e recibos (`PSIQ_ANEXOS_DIR`) copiados para armazenamento S3-compatível **em outro provedor**, já cifrados.
-- Backups cifrados com chave guardada fora da VPS. **A chave mestra (`PSIQ_CHAVE_MESTRA`) nunca vai no mesmo backup que o banco.**
-- Ao terminar com sucesso, o job de backup atualiza o arquivo de `PSIQ_BACKUP_MARCADOR` (`touch`). Se passar de 26 h sem atualizar, `verificar_saude` alerta.
+- Anexos e recibos (`MEUPSIQ_ANEXOS_DIR`) copiados para armazenamento S3-compatível **em outro provedor**, já cifrados.
+- Backups cifrados com chave guardada fora da VPS. **A chave mestra (`MEUPSIQ_CHAVE_MESTRA`) nunca vai no mesmo backup que o banco.**
+- Ao terminar com sucesso, o job de backup atualiza o arquivo de `MEUPSIQ_BACKUP_MARCADOR` (`touch`). Se passar de 26 h sem atualizar, `verificar_saude` alerta.
 - Teste de restauração mensal, documentado. Restaure em homologação, rode `migrate` e os testes de isolamento.
 
 ## Chaves
 
-- `PSIQ_CHAVE_MESTRA` aceita várias chaves separadas por vírgula (a primeira cifra, todas decifram). Para trocar: coloque a nova na frente (`nova,antiga`), rode `python manage.py rotacionar_chave_mestra` e só depois remova a antiga.
+- `MEUPSIQ_CHAVE_MESTRA` aceita várias chaves separadas por vírgula (a primeira cifra, todas decifram). Para trocar: coloque a nova na frente (`nova,antiga`), rode `python manage.py rotacionar_chave_mestra` e só depois remova a antiga.
 - Perder a chave mestra significa perder o acesso a prontuários, anexos, recibos e segredos de 2FA. Guarde cópias em dois lugares seguros e separados.
 
 ## Banco
@@ -32,7 +32,7 @@ Tarefas agendadas (cron do host ou `docker compose exec app ...`):
 ## Monitoramento
 
 - `GET /saude/` responde 200 quando a aplicação alcança o banco. Aponte o monitor externo (uptime) para ele.
-- `verificar_saude` cobre: backup parado, falhas de aviso, contas com muitas falhas de login, exportações em massa e acesso de suporte fora de autorização. Configure `PSIQ_ALERTA_EMAIL`.
+- `verificar_saude` cobre: backup parado, falhas de aviso, contas com muitas falhas de login, exportações em massa e acesso de suporte fora de autorização. Configure `MEUPSIQ_ALERTA_EMAIL`.
 
 ## Antes do primeiro cliente (docs/06)
 

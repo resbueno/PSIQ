@@ -1,8 +1,8 @@
 {% extends "base.html" %}
-{% block titulo %}Calendários · PSIQ{% endblock %}
+{% block titulo %}Calendários · MeuPSIQ{% endblock %}
 {% block conteudo %}
 <h1>Calendários externos</h1>
-<p>Conecte o Google Calendar ou o Outlook para ver suas consultas no celular e bloquear no PSIQ os horários em que você já tem outro compromisso. Os eventos criados mostram só “Consulta” e o horário, sem o nome do paciente, a menos que você ative essa opção.</p>
+<p>Conecte o Google Calendar ou o Outlook para ver suas consultas no celular e bloquear no MeuPSIQ os horários em que você já tem outro compromisso. Os eventos criados mostram só “Consulta” e o horário, sem o nome do paciente, a menos que você ative essa opção.</p>
 {% for o in opcoes %}
 <section class="dia" style="margin-bottom:1rem">
   <h2>{{ o.rotulo }}</h2>

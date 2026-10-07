@@ -1,4 +1,4 @@
-"""Financeiro. O PSIQ registra e calcula; nao movimenta dinheiro, nao emite NFS-e e nao cobra (docs/01, RF-37)."""
+"""Financeiro. O MeuPSIQ registra e calcula; nao movimenta dinheiro, nao emite NFS-e e nao cobra (docs/01, RF-37)."""
 
 from datetime import date
 

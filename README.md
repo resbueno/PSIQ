@@ -1,4 +1,4 @@
-# PSIQ
+# MeuPSIQ
 
 Plataforma SaaS de gestão de agenda, pacientes, financeiro e prontuário para psicólogos e psiquiatras. Vários consultórios independentes, dados isolados por consultório.
 
@@ -33,7 +33,7 @@ Requisitos: Python 3.12+, PostgreSQL 15+.
 ```bash
 python -m venv .venv && source .venv/bin/activate      # Windows: .venv\Scripts\activate
 pip install -r requirements-dev.txt
-cp .env.example .env                                    # gere PSIQ_CHAVE_MESTRA (comando no arquivo)
+cp .env.example .env                                    # gere MEUPSIQ_CHAVE_MESTRA (comando no arquivo)
 psql -U postgres -f scripts/db/init-local.sql           # cria o papel psiq_app e o banco
 python manage.py migrate
 python manage.py criar_consultorio --nome "Minha Clínica" \
@@ -75,7 +75,7 @@ scripts/db/        papéis do banco (desenvolvimento e produção)
 ## Pendências conhecidas da Etapa 1
 
 - Códigos de recuperação do 2FA e redefinição de senha por e-mail (dependem da camada de avisos, Etapa 2).
-- Expiração mais curta (15 min) nas áreas de prontuário (Etapa 3). Hoje a inatividade vale para todo o sistema (`PSIQ_INATIVIDADE_SEGUNDOS`).
+- Expiração mais curta (15 min) nas áreas de prontuário (Etapa 3). Hoje a inatividade vale para todo o sistema (`MEUPSIQ_INATIVIDADE_SEGUNDOS`).
 - Reuso do mesmo código TOTP dentro da janela de validade não é bloqueado.
 - 2FA obrigatório para o operador no `/admin/` (Etapa 6).
 - Tailwind e HTMX entram junto com as telas das próximas etapas; a Etapa 1 usa CSS simples em `static/css/psiq.css`.
@@ -92,10 +92,10 @@ Pendente da Etapa 2: aviso por push (PWA), mensagem ao recusar solicitação, Fu
 
 ## Etapa 3: prontuário e documentos
 
-- **Criptografia por campo** (`apps/prontuario/chaves.py`, `apps/core/cripto.py`): cada profissional tem uma chave de dados, guardada no banco cifrada pela chave mestra (que fica fora do banco e do backup). Conteúdo, CID e arquivos são cifrados com ela; cada versão registra a chave que usou, então a rotação (`rotacionar_chaves`) não quebra o histórico. `PSIQ_CHAVE_MESTRA` aceita várias chaves separadas por vírgula; `rotacionar_chave_mestra` reescreve os segredos com a primeira.
+- **Criptografia por campo** (`apps/prontuario/chaves.py`, `apps/core/cripto.py`): cada profissional tem uma chave de dados, guardada no banco cifrada pela chave mestra (que fica fora do banco e do backup). Conteúdo, CID e arquivos são cifrados com ela; cada versão registra a chave que usou, então a rotação (`rotacionar_chaves`) não quebra o histórico. `MEUPSIQ_CHAVE_MESTRA` aceita várias chaves separadas por vírgula; `rotacionar_chave_mestra` reescreve os segredos com a primeira.
 - **Versões append-only:** editar cria uma versão nova; o banco bloqueia `UPDATE` de versões e só permite `DELETE` na exclusão antecipada autorizada (flag local à transação, fechado ao fim da operação).
-- **Quem lê:** só o profissional dono. Assistente e admin leem apenas se o dono liberar. Outro profissional precisa, além da liberação, do aceite eletrônico do paciente (link por e-mail com data, hora, IP e versão do termo, revogável pelo mesmo link; revogar derruba o acesso). Toda abertura e leitura é auditada. Exige 2FA, não fica em cache do navegador e a sessão na área de prontuário expira em 15 min de inatividade (`PSIQ_INATIVIDADE_PRONTUARIO_SEGUNDOS`). Quem não pode ler recebe 404.
-- **Anexos:** extensões permitidas, limite de 10 MB, cifrados antes de ir ao armazenamento, com hash de integridade. Hoje o armazenamento é em disco (`PSIQ_ANEXOS_DIR`); a interface (`armazenamento.py`) está pronta para um backend S3-compatível.
+- **Quem lê:** só o profissional dono. Assistente e admin leem apenas se o dono liberar. Outro profissional precisa, além da liberação, do aceite eletrônico do paciente (link por e-mail com data, hora, IP e versão do termo, revogável pelo mesmo link; revogar derruba o acesso). Toda abertura e leitura é auditada. Exige 2FA, não fica em cache do navegador e a sessão na área de prontuário expira em 15 min de inatividade (`MEUPSIQ_INATIVIDADE_PRONTUARIO_SEGUNDOS`). Quem não pode ler recebe 404.
+- **Anexos:** extensões permitidas, limite de 10 MB, cifrados antes de ir ao armazenamento, com hash de integridade. Hoje o armazenamento é em disco (`MEUPSIQ_ANEXOS_DIR`); a interface (`armazenamento.py`) está pronta para um backend S3-compatível.
 - **Documentos:** modelos editáveis por consultório com marcadores (`{{paciente_nome}}` etc.), PDF gerado no servidor. Documentos clínicos ficam no prontuário, cifrados; a declaração de comparecimento usa só dados da agenda e pode ser emitida pela assistente. O profissional decide o que é liberado ao paciente.
 - **Retenção:** prazo de guarda calculado (médico 20 anos, psicólogo 5, a partir do último registro). Exclusão antecipada só pelo dono, com nome do paciente digitado, motivo e auditoria; apaga conteúdo e arquivos e mantém um registro mínimo do fato.
 - **Delegação:** o admin troca o dono de um prontuário (saída de profissional) sem ver o conteúdo; a troca fica registrada e o novo dono lê as versões antigas.
@@ -104,7 +104,7 @@ Pendente da Etapa 3: busca por texto (decisão futura, por causa da cifra), assi
 
 ## Etapa 4: financeiro, convênio e repasse
 
-O PSIQ registra e calcula; não movimenta dinheiro, não emite NFS-e e não cobra (docs/01, RF-37).
+O MeuPSIQ registra e calcula; não movimenta dinheiro, não emite NFS-e e não cobra (docs/01, RF-37).
 
 - **Cobrança automática:** ao marcar uma consulta como realizada, cria o lançamento com o valor da tabela do profissional (particular, ou da operadora se o convênio do paciente casa com um convênio ativo; primeira consulta pode ter valor próprio). Sem valor configurado não inventa cobrança; a tela da consulta oferece "Cobrança desta consulta". Cancelamento tardio só cobra se o consultório optou (`cobra_falta_tardia`).
 - **Pagamento e recibo:** forma e data do pagamento; recibo em PDF com numeração sequencial por consultório, em nome do pagador (ou do paciente), com CPF (campos do Receita Saúde), cifrado em repouso; registro do número da nota fiscal emitida fora.
@@ -120,8 +120,8 @@ Pendente da Etapa 4: relatórios financeiros (Etapa 6), lançamento de consultas
 - **Portal sem senha** (`apps/portal`): o paciente entra em `/portal/<id do consultório>/entrar/` (o link vai nos avisos), recebe um código de 6 dígitos por e-mail (guardado só como hash, vale 10 min, uso único, 5 tentativas, 5 códigos por hora) e a resposta é sempre a mesma, exista o e-mail ou não. Menor de 16 anos só pelo responsável legal; um responsável com vários filhos alterna entre eles.
 - **No portal:** próximos compromissos (confirmar, cancelar dentro do prazo, entrar na sala Jitsi 15 min antes), marcar horário (a primeira consulta vira pedido; retorno marca na hora; só horários livres das regras do profissional), pagamentos e recibos, documentos liberados pelo profissional e declarações de comparecimento, e privacidade: quem abriu o prontuário, autorizações de compartilhamento (revogáveis) e pedidos de exclusão, cópia ou correção de dados, que chegam à equipe em "Pedidos de pacientes".
 - **PWA:** manifesto e service worker na raiz. O service worker não faz cache nem intercepta requisições (nenhum dado de paciente fica no aparelho); só recebe push.
-- **Push (Web Push/VAPID):** canal plugável nos avisos, com o mesmo texto neutro do e-mail; um aviso por aparelho; aparelho que cancelou (404/410) é desativado. Gere as chaves com `npx web-push generate-vapid-keys` e preencha `PSIQ_VAPID_*`.
-- **Calendários externos** (`apps/calendarios`): OAuth com Google Calendar e Outlook/Microsoft 365, tokens cifrados pela chave mestra, `state` assinado e amarrado à sessão. Consultas vão ao calendário como "Consulta" e o horário (o nome do paciente só aparece se o profissional ligar essa opção); compromissos pessoais voltam como bloqueios que somem dos horários oferecidos no portal. `python manage.py sincronizar_calendarios` a cada 10 min (cron) ou "Sincronizar agora" na tela. Antes de usar: registrar o app no Google Cloud e no Azure e passar pela revisão deles (pré-requisito do docs/02), e preencher `PSIQ_GOOGLE_*` e `PSIQ_MICROSOFT_*`.
+- **Push (Web Push/VAPID):** canal plugável nos avisos, com o mesmo texto neutro do e-mail; um aviso por aparelho; aparelho que cancelou (404/410) é desativado. Gere as chaves com `npx web-push generate-vapid-keys` e preencha `MEUPSIQ_VAPID_*`.
+- **Calendários externos** (`apps/calendarios`): OAuth com Google Calendar e Outlook/Microsoft 365, tokens cifrados pela chave mestra, `state` assinado e amarrado à sessão. Consultas vão ao calendário como "Consulta" e o horário (o nome do paciente só aparece se o profissional ligar essa opção); compromissos pessoais voltam como bloqueios que somem dos horários oferecidos no portal. `python manage.py sincronizar_calendarios` a cada 10 min (cron) ou "Sincronizar agora" na tela. Antes de usar: registrar o app no Google Cloud e no Azure e passar pela revisão deles (pré-requisito do docs/02), e preencher `MEUPSIQ_GOOGLE_*` e `MEUPSIQ_MICROSOFT_*`.
 
 Pendente da Etapa 5: sincronização em tempo real (hoje por cron e sob demanda; a fila assíncrona entra com a infraestrutura), exportação de consultas em grupo para o calendário externo com nomes, e revisão de segurança dedicada (docs/06) antes do primeiro cliente.
 

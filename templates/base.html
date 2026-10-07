@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{% block titulo %}PSIQ{% endblock %}</title>
+  <title>{% block titulo %}MeuPSIQ{% endblock %}</title>
   <link rel="stylesheet" href="{% static 'css/psiq.css' %}">
   <link rel="manifest" href="{% url 'manifesto' %}">
   <meta name="sw" content="{% url 'service_worker' %}">
@@ -16,7 +16,7 @@
 <div class="app">
   <aside class="lateral">
     <div>
-      <div class="marca">PSIQ</div>
+      <div class="marca">MeuPSIQ</div>
       {% if consultorio_ativo %}<div class="consultorio-nome">{{ consultorio_ativo.nome }}</div>{% endif %}
     </div>
     <nav aria-label="Principal">
@@ -45,8 +45,8 @@
         <a href="{% url 'financeiro:config_lista' 'recorrentes' %}">Aluguel de sala</a>
       {% endif %}
       <a href="{% url 'contas:dispositivos' %}">Dispositivos conectados</a>
-      {% if user.is_staff %}<a href="{% url 'operador:painel' %}">Operação PSIQ</a>{% endif %}
-      {% if perfil_ativo == 'admin' and not request.suporte %}<a href="{% url 'operador:suporte_cliente' %}">Suporte do PSIQ</a>{% endif %}
+      {% if user.is_staff %}<a href="{% url 'operador:painel' %}">Operação MeuPSIQ</a>{% endif %}
+      {% if perfil_ativo == 'admin' and not request.suporte %}<a href="{% url 'operador:suporte_cliente' %}">Suporte do MeuPSIQ</a>{% endif %}
       {% if user.is_authenticated %}<a href="{% url 'contas:escolher_consultorio' %}">Trocar de consultório</a>{% endif %}
     </nav>
     <div class="fim">

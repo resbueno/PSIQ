@@ -63,7 +63,7 @@ def recalcular_situacao(consultorio, hoje: date | None = None):
     mais_antigo = vencidos.first()
     if mais_antigo is None:
         novo = Consultorio.Status.ATIVO
-    elif (hoje - mais_antigo.vencimento).days >= settings.PSIQ_CARENCIA_DIAS:
+    elif (hoje - mais_antigo.vencimento).days >= settings.MEUPSIQ_CARENCIA_DIAS:
         novo = Consultorio.Status.SOMENTE_LEITURA
     else:
         novo = Consultorio.Status.CARENCIA
@@ -72,8 +72,8 @@ def recalcular_situacao(consultorio, hoje: date | None = None):
     consultorio.status = novo
     consultorio.save(update_fields=["status", "atualizado_em"])
     if novo == Consultorio.Status.CARENCIA:
-        limite = mais_antigo.vencimento + timedelta(days=settings.PSIQ_CARENCIA_DIAS)
-        _avisar(consultorio, "Pagamento pendente do PSIQ",
+        limite = mais_antigo.vencimento + timedelta(days=settings.MEUPSIQ_CARENCIA_DIAS)
+        _avisar(consultorio, "Pagamento pendente do MeuPSIQ",
                 f"Há um pagamento pendente do {consultorio.nome}. Regularize até {limite:%d/%m/%Y} para evitar que o acesso passe a somente leitura. "
                 "Seus dados continuam disponíveis e a exportação nunca é bloqueada.")
     elif novo == Consultorio.Status.SOMENTE_LEITURA:
@@ -144,7 +144,7 @@ def acesso_vigente(operador, consultorio_id):
 
 
 @transaction.atomic
-def criar_consultorio_com_admin(*, nome, documento="", plano=None, admin_nome, admin_email, admin_senha):
+def criar_consultorio_com_admin(*, nome, slug, documento="", plano=None, admin_nome, admin_email, admin_senha):
     """Cria o consultorio e o primeiro administrador. A escrita do vinculo exige contexto de RLS."""
     from django.contrib.auth.password_validation import validate_password
 
@@ -152,7 +152,9 @@ def criar_consultorio_com_admin(*, nome, documento="", plano=None, admin_nome, a
     validate_password(admin_senha)
     if Usuario.objects.filter(email=email).exists():
         raise ErroOperador("Já existe um usuário com esse e-mail.")
-    consultorio = Consultorio.objects.create(nome=nome, documento=documento, plano=plano)
+    if Consultorio.objects.filter(slug=slug).exists():
+        raise ErroOperador("Já existe um consultório com este link.")
+    consultorio = Consultorio.objects.create(nome=nome, slug=slug, documento=documento, plano=plano)
     admin = Usuario.objects.create_user(email, admin_senha, nome=admin_nome)
     with contexto(consultorio_id=consultorio.pk, usuario_id=admin.pk):
         Vinculo.objects.create(usuario=admin, consultorio=consultorio, perfil=Perfil.ADMIN)

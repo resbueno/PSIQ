@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block corpo %}
 <header class="portal-topo">
-  <div class="portal-marca">{{ request.consultorio.nome|default:"PSIQ" }}</div>
+  <div class="portal-marca">{{ request.consultorio.nome|default:"MeuPSIQ" }}</div>
   <nav aria-label="Portal">
     <a href="{% url 'portal:home' %}">Início</a>
     <a href="{% url 'portal:agendar' %}">Marcar horário</a>

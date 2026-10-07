@@ -28,7 +28,7 @@ from apps.plataforma.models import Consultorio, PagamentoPlataforma, Plano
 from apps.prontuario import servico as prontuario
 
 SP = ZoneInfo("America/Sao_Paulo")
-NOME_DEMO = "Clínica Demo PSIQ"
+NOME_DEMO = "Clínica Demo MeuPSIQ"
 D = Decimal
 
 
@@ -40,7 +40,7 @@ class Command(BaseCommand):
     help = "Cria um consultório fictício completo, com todos os papéis e dados de exemplo (apenas homologação)."
 
     def add_arguments(self, parser):
-        parser.add_argument("--dominio", default="demo.psiq.local", help="Domínio fictício dos e-mails")
+        parser.add_argument("--dominio", default="demo.meupsiq.local", help="Domínio fictício dos e-mails")
         parser.add_argument("--forcar", action="store_true", help="Permite rodar com DEBUG desligado (homologação)")
 
     def handle(self, *args, **opcoes):
@@ -74,9 +74,11 @@ class Command(BaseCommand):
         plano = Plano.objects.get_or_create(
             nome="Demonstração", defaults={"limite_pacientes_ativos": 50, "limite_profissionais": 5, "preco": D("199.00")}
         )[0]
-        consultorio = Consultorio.objects.create(nome=NOME_DEMO, documento="", plano=plano, cobra_falta_tardia=True)
+        consultorio = Consultorio.objects.create(
+            nome=NOME_DEMO, slug="clinica-demo-meupsiq", documento="", plano=plano, cobra_falta_tardia=True
+        )
 
-        operador_plataforma = usuario("operador", "Atendente da Plataforma", "Operador da plataforma (equipe PSIQ)", staff=True, com_2fa=True)
+        operador_plataforma = usuario("operador", "Atendente da Plataforma", "Operador da plataforma (equipe MeuPSIQ)", staff=True, com_2fa=True)
         admin = usuario("admin", "Beatriz Admin", "Administrador do consultório")
         assistente = usuario("assistente", "Carla Assistente", "Assistente (secretária)", com_2fa=True)
         psicologa = usuario("psicologa", "Dra. Helena Psicóloga", "Profissional: psicóloga (CRP)", com_2fa=True)
@@ -185,13 +187,14 @@ class Command(BaseCommand):
         operador.criar_pagamento(consultorio, competencia=date.today(), valor=D("199.00"), vencimento=date.today() + timedelta(days=10))
 
     def _imprimir(self, credenciais, consultorio):
-        base = settings.PSIQ_URL_BASE.rstrip("/")
+        base = settings.MEUPSIQ_URL_BASE.rstrip("/")
         self.stdout.write(self.style.SUCCESS(f"\nConsultório fictício criado: {consultorio.nome}"))
-        self.stdout.write(f"Entrar (equipe): {base}/entrar/")
+        self.stdout.write(f"Entrar (equipe): {base}/entrar/ ou {base}/{consultorio.slug}/")
+        self.stdout.write(f"Agendamento público: {base}/{consultorio.slug}/agenda/")
         self.stdout.write(f"Portal do paciente: {base}/portal/{consultorio.pk}/entrar/\n")
         for c in credenciais:
             self.stdout.write(f"- {c['papel']}\n    e-mail: {c['email']}\n    senha:  {c['senha']}")
             if c["segredo"]:
-                uri = pyotp.TOTP(c["segredo"]).provisioning_uri(name=c["email"], issuer_name="PSIQ Demo")
+                uri = pyotp.TOTP(c["segredo"]).provisioning_uri(name=c["email"], issuer_name="MeuPSIQ Demo")
                 self.stdout.write(f"    2FA (chave do autenticador): {c['segredo']}\n    2FA (URI): {uri}")
         self.stdout.write("\nOs códigos do portal não saem por e-mail aqui (SMTP não configurado): leia nos logs do contêiner.")

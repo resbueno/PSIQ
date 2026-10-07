@@ -64,7 +64,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
-                "apps.core.context_processors.contexto_psiq",
+                "apps.core.context_processors.contexto_meupsiq",
             ],
         },
     },
@@ -112,94 +112,97 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 
 # Sessao: guardada no banco, expira por inatividade, cookie protegido.
 SESSION_ENGINE = "django.contrib.sessions.backends.db"
-SESSION_COOKIE_AGE = env.int("PSIQ_INATIVIDADE_SEGUNDOS", default=1800)
+SESSION_COOKIE_AGE = env.int("MEUPSIQ_INATIVIDADE_SEGUNDOS", default=1800)
 SESSION_SAVE_EVERY_REQUEST = True
 SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SAMESITE = "Lax"
 CSRF_COOKIE_SAMESITE = "Lax"
 
-# Instalacao sob um prefixo (ex.: https://host/psiq). O proxy remove o prefixo antes de chamar a aplicacao;
+# Instalacao sob um prefixo (ex.: https://host/meupsiq). O proxy remove o prefixo antes de chamar a aplicacao;
 # o Django passa a gerar todos os enderecos com ele. Cookies com nome e caminho proprios nao colidem com
 # outros sistemas no mesmo dominio.
-PSIQ_PREFIXO = env("PSIQ_PREFIXO", default="").rstrip("/")
-SESSION_COOKIE_NAME = "psiq_sessionid"
-CSRF_COOKIE_NAME = "psiq_csrftoken"
-if PSIQ_PREFIXO:
-    FORCE_SCRIPT_NAME = PSIQ_PREFIXO
-    SESSION_COOKIE_PATH = PSIQ_PREFIXO
-    CSRF_COOKIE_PATH = PSIQ_PREFIXO
-CSRF_TRUSTED_ORIGINS = env.list("PSIQ_ORIGENS_CONFIAVEIS", default=[])
-# Absoluto e com o prefixo: o WhiteNoise serve em /psiq/static/ e o {% static %} gera o mesmo endereco.
-STATIC_URL = f"{PSIQ_PREFIXO}/static/"
+MEUPSIQ_PREFIXO = env("MEUPSIQ_PREFIXO", default="").rstrip("/")
+SESSION_COOKIE_NAME = "meupsiq_sessionid"
+CSRF_COOKIE_NAME = "meupsiq_csrftoken"
+if MEUPSIQ_PREFIXO:
+    FORCE_SCRIPT_NAME = MEUPSIQ_PREFIXO
+    SESSION_COOKIE_PATH = MEUPSIQ_PREFIXO
+    CSRF_COOKIE_PATH = MEUPSIQ_PREFIXO
+CSRF_TRUSTED_ORIGINS = env.list("MEUPSIQ_ORIGENS_CONFIAVEIS", default=[])
+# Absoluto e com o prefixo: o WhiteNoise serve em /meupsiq/static/ e o {% static %} gera o mesmo endereco.
+STATIC_URL = f"{MEUPSIQ_PREFIXO}/static/"
 
-# Em producao tudo e HTTPS. Homologacao sem terminador TLS define PSIQ_HTTPS=false.
-if not DEBUG and env.bool("PSIQ_HTTPS", default=True):
+# Em producao tudo e HTTPS. Homologacao sem terminador TLS define MEUPSIQ_HTTPS=false.
+if not DEBUG and env.bool("MEUPSIQ_HTTPS", default=True):
     SECURE_SSL_REDIRECT = True
     SECURE_REDIRECT_EXEMPT = [r"(^|/)saude/$"]  # o healthcheck do contêiner chama por HTTP, de dentro
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
-    SECURE_HSTS_SECONDS = env.int("PSIQ_HSTS_SEGUNDOS", default=31536000)  # 0 quando o proxy ja define HSTS
-    SECURE_HSTS_INCLUDE_SUBDOMAINS = env.bool("PSIQ_HSTS_SUBDOMINIOS", default=True) and SECURE_HSTS_SECONDS > 0
+    SECURE_HSTS_SECONDS = env.int("MEUPSIQ_HSTS_SEGUNDOS", default=31536000)  # 0 quando o proxy ja define HSTS
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = env.bool("MEUPSIQ_HSTS_SUBDOMINIOS", default=True) and SECURE_HSTS_SECONDS > 0
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 SECURE_CONTENT_TYPE_NOSNIFF = True
 X_FRAME_OPTIONS = "DENY"
 SECURE_REFERRER_POLICY = "same-origin"
 
 # Chave mestra (Fernet) para segredos cifrados. Fica fora do banco e do backup.
-PSIQ_CHAVE_MESTRA = env("PSIQ_CHAVE_MESTRA", default="")
+MEUPSIQ_CHAVE_MESTRA = env("MEUPSIQ_CHAVE_MESTRA", default="")
 
 # Bloqueio progressivo de login: apos N falhas, espera dobra a cada falha (maximo em minutos).
-PSIQ_LOGIN_FALHAS_ANTES_DO_BLOQUEIO = 5
-PSIQ_LOGIN_BLOQUEIO_MAXIMO_MINUTOS = 60
-PSIQ_NOME_EMISSOR_2FA = "PSIQ"
+MEUPSIQ_LOGIN_FALHAS_ANTES_DO_BLOQUEIO = 5
+MEUPSIQ_LOGIN_BLOQUEIO_MAXIMO_MINUTOS = 60
+MEUPSIQ_NOME_EMISSOR_2FA = "MeuPSIQ"
 
 # Avisos e links
-PSIQ_URL_BASE = env("PSIQ_URL_BASE", default="http://localhost:8000")
-PSIQ_JITSI_URL = env("PSIQ_JITSI_URL", default="https://meet.jit.si")
+MEUPSIQ_URL_BASE = env("MEUPSIQ_URL_BASE", default="http://localhost:8000")
+MEUPSIQ_JITSI_URL = env("MEUPSIQ_JITSI_URL", default="https://meet.jit.si")
 EMAIL_BACKEND = env("EMAIL_BACKEND", default="django.core.mail.backends.console.EmailBackend")
 EMAIL_HOST = env("EMAIL_HOST", default="localhost")
 EMAIL_PORT = env.int("EMAIL_PORT", default=25)
 EMAIL_HOST_USER = env("EMAIL_HOST_USER", default="")
 EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD", default="")
 EMAIL_USE_TLS = env.bool("EMAIL_USE_TLS", default=False)
-DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", default="PSIQ <nao-responder@localhost>")
+DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", default="MeuPSIQ <nao-responder@localhost>")
 
 # Prontuario
-PSIQ_ANEXOS_DIR = env("PSIQ_ANEXOS_DIR", default=str(BASE_DIR / "armazenamento"))
-PSIQ_ANEXO_MAX_BYTES = 10 * 1024 * 1024
-PSIQ_ANEXO_EXTENSOES = ("pdf", "png", "jpg", "jpeg", "txt", "doc", "docx")
-PSIQ_INATIVIDADE_PRONTUARIO_SEGUNDOS = env.int("PSIQ_INATIVIDADE_PRONTUARIO_SEGUNDOS", default=900)
+MEUPSIQ_ANEXOS_DIR = env("MEUPSIQ_ANEXOS_DIR", default=str(BASE_DIR / "armazenamento"))
+MEUPSIQ_ANEXO_MAX_BYTES = 10 * 1024 * 1024
+MEUPSIQ_ANEXO_EXTENSOES = ("pdf", "png", "jpg", "jpeg", "txt", "doc", "docx")
+MEUPSIQ_INATIVIDADE_PRONTUARIO_SEGUNDOS = env.int("MEUPSIQ_INATIVIDADE_PRONTUARIO_SEGUNDOS", default=900)
 
 # Portal do paciente
-PSIQ_PORTAL_CODIGO_VALIDADE_MINUTOS = 10
-PSIQ_PORTAL_MAX_TENTATIVAS = 5
-PSIQ_PORTAL_MAX_CODIGOS_POR_HORA = 5
-PSIQ_PORTAL_IDADE_MINIMA_ACESSO_PROPRIO = 16
+MEUPSIQ_PORTAL_CODIGO_VALIDADE_MINUTOS = 10
+MEUPSIQ_PORTAL_MAX_TENTATIVAS = 5
+MEUPSIQ_PORTAL_MAX_CODIGOS_POR_HORA = 5
+MEUPSIQ_PORTAL_IDADE_MINIMA_ACESSO_PROPRIO = 16
+
+# Agendamento público (link /<slug>/agenda/, sem login): limite de pedidos por e-mail por hora, contra abuso.
+MEUPSIQ_PUBLICO_MAX_PEDIDOS_POR_HORA = 3
 
 # Notificacoes push (Web Push). Gere as chaves VAPID com: npx web-push generate-vapid-keys
-PSIQ_VAPID_PUBLIC_KEY = env("PSIQ_VAPID_PUBLIC_KEY", default="")
-PSIQ_VAPID_PRIVATE_KEY = env("PSIQ_VAPID_PRIVATE_KEY", default="")
-PSIQ_VAPID_SUBJECT = env("PSIQ_VAPID_SUBJECT", default="mailto:contato@localhost")
+MEUPSIQ_VAPID_PUBLIC_KEY = env("MEUPSIQ_VAPID_PUBLIC_KEY", default="")
+MEUPSIQ_VAPID_PRIVATE_KEY = env("MEUPSIQ_VAPID_PRIVATE_KEY", default="")
+MEUPSIQ_VAPID_SUBJECT = env("MEUPSIQ_VAPID_SUBJECT", default="mailto:contato@localhost")
 
 # Calendarios externos (OAuth). Registre o app no Google Cloud e no Azure e informe as credenciais.
-PSIQ_GOOGLE_CLIENT_ID = env("PSIQ_GOOGLE_CLIENT_ID", default="")
-PSIQ_GOOGLE_CLIENT_SECRET = env("PSIQ_GOOGLE_CLIENT_SECRET", default="")
-PSIQ_MICROSOFT_CLIENT_ID = env("PSIQ_MICROSOFT_CLIENT_ID", default="")
-PSIQ_MICROSOFT_CLIENT_SECRET = env("PSIQ_MICROSOFT_CLIENT_SECRET", default="")
-PSIQ_MICROSOFT_TENANT = env("PSIQ_MICROSOFT_TENANT", default="common")
-PSIQ_CALENDARIO_JANELA_DIAS = 60
+MEUPSIQ_GOOGLE_CLIENT_ID = env("MEUPSIQ_GOOGLE_CLIENT_ID", default="")
+MEUPSIQ_GOOGLE_CLIENT_SECRET = env("MEUPSIQ_GOOGLE_CLIENT_SECRET", default="")
+MEUPSIQ_MICROSOFT_CLIENT_ID = env("MEUPSIQ_MICROSOFT_CLIENT_ID", default="")
+MEUPSIQ_MICROSOFT_CLIENT_SECRET = env("MEUPSIQ_MICROSOFT_CLIENT_SECRET", default="")
+MEUPSIQ_MICROSOFT_TENANT = env("MEUPSIQ_MICROSOFT_TENANT", default="common")
+MEUPSIQ_CALENDARIO_JANELA_DIAS = 60
 
 # Inadimplencia: aviso, carencia de 15 dias, depois somente leitura (exportacao sempre liberada)
-PSIQ_CARENCIA_DIAS = 15
+MEUPSIQ_CARENCIA_DIAS = 15
 
 # Importacao de pacientes por planilha
-PSIQ_IMPORTACAO_MAX_BYTES = 5 * 1024 * 1024
-PSIQ_IMPORTACAO_MAX_LINHAS = 5000
+MEUPSIQ_IMPORTACAO_MAX_BYTES = 5 * 1024 * 1024
+MEUPSIQ_IMPORTACAO_MAX_LINHAS = 5000
 
 # Monitoramento (python manage.py verificar_saude, via cron)
-PSIQ_ALERTA_EMAIL = env("PSIQ_ALERTA_EMAIL", default="")
-PSIQ_BACKUP_MARCADOR = env("PSIQ_BACKUP_MARCADOR", default="")  # arquivo que o job de backup atualiza ao terminar com sucesso
-PSIQ_BACKUP_MAX_HORAS = 26
-PSIQ_ALERTA_FALHAS_DE_AVISO = 10      # por hora
-PSIQ_ALERTA_LOGINS_FALHOS = 10        # falhas acumuladas em uma conta
-PSIQ_ALERTA_EXPORTACOES = 5           # por hora, em um consultorio
+MEUPSIQ_ALERTA_EMAIL = env("MEUPSIQ_ALERTA_EMAIL", default="")
+MEUPSIQ_BACKUP_MARCADOR = env("MEUPSIQ_BACKUP_MARCADOR", default="")  # arquivo que o job de backup atualiza ao terminar com sucesso
+MEUPSIQ_BACKUP_MAX_HORAS = 26
+MEUPSIQ_ALERTA_FALHAS_DE_AVISO = 10      # por hora
+MEUPSIQ_ALERTA_LOGINS_FALHOS = 10        # falhas acumuladas em uma conta
+MEUPSIQ_ALERTA_EXPORTACOES = 5           # por hora, em um consultorio

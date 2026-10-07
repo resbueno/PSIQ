@@ -1,4 +1,4 @@
-def contexto_psiq(request):
+def contexto_meupsiq(request):
     vinculo = getattr(request, "vinculo", None)
     consultorio = getattr(request, "consultorio", None)
     return {

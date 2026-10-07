@@ -32,7 +32,7 @@ def cena(criar_consultorio, criar_usuario, criar_paciente, fazer_request, settin
     c.maria = criar_paciente(c.consultorio, "Maria da Silva", email="maria@x.com")
     c.req = lambda: fazer_request(c.assistente, c.consultorio)
     definir_contexto(consultorio_id=c.consultorio.pk)
-    settings.PSIQ_VAPID_PUBLIC_KEY, settings.PSIQ_VAPID_PRIVATE_KEY = "publica", "privada"
+    settings.MEUPSIQ_VAPID_PUBLIC_KEY, settings.MEUPSIQ_VAPID_PRIVATE_KEY = "publica", "privada"
     return c
 
 
@@ -100,7 +100,7 @@ def test_aviso_vai_por_email_e_por_push_em_cada_aparelho(cena):
 
 def test_sem_chaves_vapid_nao_ha_push(cena, settings):
     inscrever(cena)
-    settings.PSIQ_VAPID_PRIVATE_KEY = ""
+    settings.MEUPSIQ_VAPID_PRIVATE_KEY = ""
     with mock.patch("apps.portal.push.webpush") as enviar:
         agendar(cena)
     assert not enviar.called and not Aviso.objects.filter(canal="push").exists()

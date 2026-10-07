@@ -1,5 +1,5 @@
 # TLS automatico (Let's Encrypt). Troque pelo seu dominio.
-psiq.exemplo.com.br {
+meupsiq.exemplo.com.br {
 	encode zstd gzip
 	header {
 		Strict-Transport-Security "max-age=31536000; includeSubDomains"

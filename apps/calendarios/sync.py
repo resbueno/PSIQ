@@ -80,7 +80,7 @@ def _importar(conta, acesso, agora, janela_fim):
 def sincronizar(conta, *, agora=None) -> bool:
     """Retorna True se sincronizou. Erros do provedor ficam em `ultimo_erro`."""
     agora = agora or timezone.now()
-    janela_fim = agora + timedelta(days=settings.PSIQ_CALENDARIO_JANELA_DIAS)
+    janela_fim = agora + timedelta(days=settings.MEUPSIQ_CALENDARIO_JANELA_DIAS)
     try:
         acesso = _token_valido(conta)
         _exportar(conta, acesso, agora, janela_fim)
@@ -96,7 +96,7 @@ def sincronizar(conta, *, agora=None) -> bool:
 
 
 def desconectar(conta):
-    """Remove da agenda externa os eventos que o PSIQ criou (melhor esforco) e apaga a conexao e os tokens."""
+    """Remove da agenda externa os eventos que o MeuPSIQ criou (melhor esforco) e apaga a conexao e os tokens."""
     try:
         acesso = _token_valido(conta)
         for evento in conta.eventos.filter(origem=EventoExterno.Origem.PSIQ):

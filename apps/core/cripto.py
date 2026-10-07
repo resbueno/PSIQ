@@ -1,6 +1,6 @@
 """Cifra de segredos e de dados clinicos.
 
-- Chave mestra (`PSIQ_CHAVE_MESTRA`): fora do banco e do backup. Aceita varias chaves separadas por virgula;
+- Chave mestra (`MEUPSIQ_CHAVE_MESTRA`): fora do banco e do backup. Aceita varias chaves separadas por virgula;
   a primeira cifra, todas decifram (rotacao sem parar o sistema).
 - Chaves de dados (uma ativa por profissional): guardadas no banco cifradas pela mestra, usadas para o conteudo
   clinico e os arquivos. Ver `apps.prontuario.chaves`.
@@ -12,9 +12,9 @@ from django.core.exceptions import ImproperlyConfigured
 
 
 def _mestra() -> MultiFernet:
-    chaves = [c.strip() for c in settings.PSIQ_CHAVE_MESTRA.split(",") if c.strip()]
+    chaves = [c.strip() for c in settings.MEUPSIQ_CHAVE_MESTRA.split(",") if c.strip()]
     if not chaves:
-        raise ImproperlyConfigured("Defina PSIQ_CHAVE_MESTRA para cifrar segredos.")
+        raise ImproperlyConfigured("Defina MEUPSIQ_CHAVE_MESTRA para cifrar segredos.")
     return MultiFernet([Fernet(c.encode()) for c in chaves])
 
 

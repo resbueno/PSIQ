@@ -27,8 +27,8 @@ services:
     env_file: ../../.env
     environment:
       DB_HOST: db
-      PSIQ_ANEXOS_DIR: /data/anexos
-      PSIQ_BACKUP_MARCADOR: /var/lib/psiq/ultimo-backup-ok
+      MEUPSIQ_ANEXOS_DIR: /data/anexos
+      MEUPSIQ_BACKUP_MARCADOR: /var/lib/psiq/ultimo-backup-ok
     volumes:
       - anexos:/data/anexos
       - /psiq/estado:/var/lib/psiq:ro

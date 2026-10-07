@@ -1,6 +1,17 @@
+from django.core.exceptions import ValidationError
 from django.db import models
 
 from apps.core.models import ModeloBase
+
+# Primeiro segmento de toda URL que nao e de um consultorio (apps internos, estaticos, etc.).
+# Um consultorio nao pode usar um destes como link, senao a rota nunca seria alcancada.
+SLUGS_RESERVADOS = frozenset({
+    "admin", "static", "media", "favicon.ico", "robots.txt", "sw.js", "saude", "manifest.webmanifest",
+    "entrar", "sair", "conta", "consultorio", "usuarios", "auditoria",
+    "pacientes", "grupos", "agenda", "c", "prontuarios", "termo",
+    "financeiro", "portal", "lgpd", "calendarios", "operador", "suporte",
+    "relatorios", "exportacao", "importacao",
+})
 
 
 class Plano(ModeloBase):
@@ -26,6 +37,10 @@ class Consultorio(ModeloBase):
         ENCERRADO = "encerrado", "Encerrado"
 
     nome = models.CharField(max_length=160)
+    slug = models.SlugField(
+        "link de acesso", max_length=60, unique=True,
+        help_text="Usado no endereço de login e de agendamento do consultório, ex.: /nome-da-clinica/",
+    )
     documento = models.CharField("CNPJ ou CPF", max_length=18, blank=True)
     plano = models.ForeignKey(Plano, null=True, blank=True, on_delete=models.PROTECT, related_name="consultorios")
     status = models.CharField(max_length=20, choices=Status.choices, default=Status.ATIVO)
@@ -36,6 +51,11 @@ class Consultorio(ModeloBase):
 
     def __str__(self):
         return self.nome
+
+    def clean(self):
+        super().clean()
+        if self.slug in SLUGS_RESERVADOS:
+            raise ValidationError({"slug": "Este link é reservado para o sistema. Escolha outro."})
 
     @property
     def somente_leitura(self):

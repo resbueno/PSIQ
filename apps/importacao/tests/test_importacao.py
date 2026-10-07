@@ -160,11 +160,11 @@ def test_arquivos_invalidos_sao_recusados_com_mensagem(cena, arquivo, trecho):
 
 
 def test_limites_de_tamanho_e_de_linhas(cena, settings):
-    settings.PSIQ_IMPORTACAO_MAX_BYTES = 50
+    settings.MEUPSIQ_IMPORTACAO_MAX_BYTES = 50
     with pytest.raises(servico.ErroImportacao, match="limite"):
         lote(cena, csv("A;;;;;;", "B;;;;;;", "C;;;;;;", "D;;;;;;"))
-    settings.PSIQ_IMPORTACAO_MAX_BYTES = 5 * 1024 * 1024
-    settings.PSIQ_IMPORTACAO_MAX_LINHAS = 2
+    settings.MEUPSIQ_IMPORTACAO_MAX_BYTES = 5 * 1024 * 1024
+    settings.MEUPSIQ_IMPORTACAO_MAX_LINHAS = 2
     with pytest.raises(servico.ErroImportacao, match="mais de 2 linhas"):
         lote(cena, csv("A;;;;;;", "B;;;;;;", "C;;;;;;"))
 

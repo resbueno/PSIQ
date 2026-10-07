@@ -45,10 +45,10 @@ class ContaCalendario(ModeloBase):
 
 
 class EventoExterno(ModeloBase):
-    """'psiq': evento que o PSIQ criou no calendario externo. 'externo': compromisso pessoal que bloqueia horarios."""
+    """'meupsiq': evento que o MeuPSIQ criou no calendario externo. 'externo': compromisso pessoal que bloqueia horarios."""
 
     class Origem(models.TextChoices):
-        PSIQ = "psiq", "Criado pelo PSIQ"
+        PSIQ = "meupsiq", "Criado pelo MeuPSIQ"
         EXTERNO = "externo", "Compromisso externo"
 
     consultorio = models.ForeignKey("plataforma.Consultorio", on_delete=models.PROTECT, related_name="+")
@@ -56,7 +56,7 @@ class EventoExterno(ModeloBase):
     origem = models.CharField(max_length=8, choices=Origem.choices)
     consulta = models.ForeignKey("agenda.Consulta", null=True, blank=True, on_delete=models.CASCADE, related_name="+")
     id_externo = models.CharField(max_length=300)
-    titulo = models.CharField(max_length=200, blank=True, help_text="Titulo exportado (so eventos criados pelo PSIQ).")
+    titulo = models.CharField(max_length=200, blank=True, help_text="Titulo exportado (so eventos criados pelo MeuPSIQ).")
     inicio = models.DateTimeField()
     fim = models.DateTimeField()
 

@@ -1,0 +1,41 @@
+{% extends "entrada_base.html" %}
+{% block titulo %}Marcar horário · {{ consultorio.nome }}{% endblock %}
+{% block formulario %}
+<h1>Marcar horário</h1>
+<p>{{ consultorio.nome }}</p>
+<p>Escolha um profissional e um horário. Isto envia um <strong>pedido</strong>: o consultório confirma e avisa você por e-mail.</p>
+
+<form method="get" class="busca">
+  <label for="prof">Profissional</label>
+  <select name="profissional" id="prof" data-autosubmit>
+    {% for p in profissionais %}<option value="{{ p.pk }}" {% if p.pk == escolhido.pk %}selected{% endif %}>{{ p.usuario.nome }}</option>{% endfor %}
+  </select>
+  <noscript><button class="botao" type="submit">Ver horários</button></noscript>
+</form>
+
+{% if not profissionais %}
+  <p class="ajuda">Nenhum profissional disponível para agendamento no momento. Fale com o consultório.</p>
+{% elif not dias %}
+  <p class="ajuda">Não há horários livres nos próximos dias para este profissional. Fale com o consultório.</p>
+{% else %}
+<form method="post" class="campos" novalidate>{% csrf_token %}
+  <input type="hidden" name="profissional" value="{{ escolhido.pk }}">
+  <div>
+    <label for="inicio">Horário</label>
+    <select name="inicio" id="inicio" required>
+      {% for d in dias %}
+        <optgroup label="{{ d.data|date:'l, d/m' }}">
+          {% for h in d.horarios %}<option value="{{ h|date:'c' }}">{{ h|date:"H:i" }}</option>{% endfor %}
+        </optgroup>
+      {% endfor %}
+    </select>
+  </div>
+  <div>
+    <label for="tipo">Tipo de atendimento</label>
+    <select name="tipo" id="tipo">{% for v, rotulo in tipos %}<option value="{{ v }}">{{ rotulo }}</option>{% endfor %}</select>
+  </div>
+  {% include "_campos.html" %}
+  <button class="botao" type="submit">Enviar pedido</button>
+</form>
+{% endif %}
+{% endblock %}

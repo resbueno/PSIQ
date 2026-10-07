@@ -76,7 +76,7 @@ class PagamentoForm(forms.Form):
 
 
 class NotaExternaForm(forms.Form):
-    numero_nota = forms.CharField(label="Número da nota fiscal emitida fora do PSIQ", max_length=40)
+    numero_nota = forms.CharField(label="Número da nota fiscal emitida fora do MeuPSIQ", max_length=40)
 
 
 class LancamentoManualForm(_ComProfissionais, forms.Form):

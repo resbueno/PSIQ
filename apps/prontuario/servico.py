@@ -128,10 +128,10 @@ def nova_versao(request, registro, *, conteudo, cid=""):
 def anexar(request, prontuario, arquivo, *, importado_historico=False):
     nome = os.path.basename(arquivo.name or "arquivo")[:200]
     extensao = nome.rsplit(".", 1)[-1].lower() if "." in nome else ""
-    if extensao not in settings.PSIQ_ANEXO_EXTENSOES:
-        raise ErroProntuario("Tipo de arquivo não permitido. Use: " + ", ".join(settings.PSIQ_ANEXO_EXTENSOES) + ".")
-    if arquivo.size > settings.PSIQ_ANEXO_MAX_BYTES:
-        raise ErroProntuario(f"O arquivo passa do limite de {settings.PSIQ_ANEXO_MAX_BYTES // (1024 * 1024)} MB.")
+    if extensao not in settings.MEUPSIQ_ANEXO_EXTENSOES:
+        raise ErroProntuario("Tipo de arquivo não permitido. Use: " + ", ".join(settings.MEUPSIQ_ANEXO_EXTENSOES) + ".")
+    if arquivo.size > settings.MEUPSIQ_ANEXO_MAX_BYTES:
+        raise ErroProntuario(f"O arquivo passa do limite de {settings.MEUPSIQ_ANEXO_MAX_BYTES // (1024 * 1024)} MB.")
     dados = arquivo.read()
     chave = chaves.chave_ativa(prontuario.profissional)
     caminho = armazenamento().salvar(chaves.cifrar_arquivo(chave, dados))
@@ -296,7 +296,7 @@ def solicitar_consentimento(request, prontuario, profissional_destino):
     for consentimento in criados:
         if consentimento.vigente:
             continue
-        link = f"{settings.PSIQ_URL_BASE.rstrip('/')}/termo/{token_consentimento(consentimento)}/"
+        link = f"{settings.MEUPSIQ_URL_BASE.rstrip('/')}/termo/{token_consentimento(consentimento)}/"
         corpo = (
             "Olá.\n\nHá um pedido de autorização para compartilhar informações do seu acompanhamento com outro "
             f"profissional.\nLeia e responda por este link: {link}\n\n{prontuario.consultorio.nome}"

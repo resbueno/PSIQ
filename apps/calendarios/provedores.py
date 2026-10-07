@@ -75,17 +75,17 @@ class Google(Provedor):
     ESCOPOS = "https://www.googleapis.com/auth/calendar.events https://www.googleapis.com/auth/userinfo.email"
 
     def configurado(self):
-        return bool(settings.PSIQ_GOOGLE_CLIENT_ID and settings.PSIQ_GOOGLE_CLIENT_SECRET)
+        return bool(settings.MEUPSIQ_GOOGLE_CLIENT_ID and settings.MEUPSIQ_GOOGLE_CLIENT_SECRET)
 
     def url_autorizacao(self, state, redirect_uri):
         return self.AUTORIZAR + "?" + urlencode({
-            "client_id": settings.PSIQ_GOOGLE_CLIENT_ID, "redirect_uri": redirect_uri, "response_type": "code",
+            "client_id": settings.MEUPSIQ_GOOGLE_CLIENT_ID, "redirect_uri": redirect_uri, "response_type": "code",
             "scope": self.ESCOPOS, "access_type": "offline", "prompt": "consent", "state": state,
         })
 
     def _token(self, dados):
         resposta = _checar(requests.post(self.TOKEN, data={
-            "client_id": settings.PSIQ_GOOGLE_CLIENT_ID, "client_secret": settings.PSIQ_GOOGLE_CLIENT_SECRET, **dados,
+            "client_id": settings.MEUPSIQ_GOOGLE_CLIENT_ID, "client_secret": settings.MEUPSIQ_GOOGLE_CLIENT_SECRET, **dados,
         }, timeout=TIMEOUT)).json()
         return {"acesso": resposta["access_token"], "refresh": resposta.get("refresh_token", ""), "expira_em": self._expira(resposta.get("expires_in"))}
 
@@ -140,20 +140,20 @@ class Microsoft(Provedor):
     ESCOPOS = "offline_access Calendars.ReadWrite User.Read"
 
     def _base(self):
-        return f"https://login.microsoftonline.com/{settings.PSIQ_MICROSOFT_TENANT}/oauth2/v2.0"
+        return f"https://login.microsoftonline.com/{settings.MEUPSIQ_MICROSOFT_TENANT}/oauth2/v2.0"
 
     def configurado(self):
-        return bool(settings.PSIQ_MICROSOFT_CLIENT_ID and settings.PSIQ_MICROSOFT_CLIENT_SECRET)
+        return bool(settings.MEUPSIQ_MICROSOFT_CLIENT_ID and settings.MEUPSIQ_MICROSOFT_CLIENT_SECRET)
 
     def url_autorizacao(self, state, redirect_uri):
         return self._base() + "/authorize?" + urlencode({
-            "client_id": settings.PSIQ_MICROSOFT_CLIENT_ID, "redirect_uri": redirect_uri, "response_type": "code",
+            "client_id": settings.MEUPSIQ_MICROSOFT_CLIENT_ID, "redirect_uri": redirect_uri, "response_type": "code",
             "scope": self.ESCOPOS, "response_mode": "query", "state": state, "prompt": "select_account",
         })
 
     def _token(self, dados):
         resposta = _checar(requests.post(self._base() + "/token", data={
-            "client_id": settings.PSIQ_MICROSOFT_CLIENT_ID, "client_secret": settings.PSIQ_MICROSOFT_CLIENT_SECRET,
+            "client_id": settings.MEUPSIQ_MICROSOFT_CLIENT_ID, "client_secret": settings.MEUPSIQ_MICROSOFT_CLIENT_SECRET,
             "scope": self.ESCOPOS, **dados,
         }, timeout=TIMEOUT)).json()
         return {"acesso": resposta["access_token"], "refresh": resposta.get("refresh_token", ""), "expira_em": self._expira(resposta.get("expires_in"))}

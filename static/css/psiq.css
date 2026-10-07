@@ -129,3 +129,7 @@ textarea { width: 100%; padding: .65rem .75rem; border: 1px solid #9db0ae; borde
 .portal-marca { font-family: var(--fonte-titulo); font-size: 1.3rem; }
 .portal-topo nav { display: flex; flex-wrap: wrap; gap: .25rem; }
 .portal-conteudo { padding: 2rem clamp(1rem, 4vw, 3rem); max-width: 52rem; }
+
+/* Campo isca (honeypot) contra robos no agendamento publico: some da tela, mas nao do HTML. */
+.campo-isca { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+.campos div:has(> .campo-isca) { position: absolute; left: -9999px; }

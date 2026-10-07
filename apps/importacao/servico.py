@@ -79,8 +79,8 @@ def _ler_xlsx(conteudo: bytes):
 
 def ler_arquivo(arquivo):
     nome = (arquivo.name or "").lower()
-    if arquivo.size > settings.PSIQ_IMPORTACAO_MAX_BYTES:
-        raise ErroImportacao(f"O arquivo passa do limite de {settings.PSIQ_IMPORTACAO_MAX_BYTES // (1024 * 1024)} MB.")
+    if arquivo.size > settings.MEUPSIQ_IMPORTACAO_MAX_BYTES:
+        raise ErroImportacao(f"O arquivo passa do limite de {settings.MEUPSIQ_IMPORTACAO_MAX_BYTES // (1024 * 1024)} MB.")
     conteudo = arquivo.read()
     if nome.endswith(".csv") or nome.endswith(".txt"):
         linhas = _ler_csv(conteudo)
@@ -91,8 +91,8 @@ def ler_arquivo(arquivo):
     linhas = [l for l in linhas if any(str(c).strip() for c in l if c is not None)]
     if len(linhas) < 2:
         raise ErroImportacao("A planilha está vazia. Preencha ao menos uma linha abaixo do cabeçalho.")
-    if len(linhas) - 1 > settings.PSIQ_IMPORTACAO_MAX_LINHAS:
-        raise ErroImportacao(f"A planilha tem mais de {settings.PSIQ_IMPORTACAO_MAX_LINHAS} linhas. Divida em partes.")
+    if len(linhas) - 1 > settings.MEUPSIQ_IMPORTACAO_MAX_LINHAS:
+        raise ErroImportacao(f"A planilha tem mais de {settings.MEUPSIQ_IMPORTACAO_MAX_LINHAS} linhas. Divida em partes.")
     mapa = _mapear_cabecalho(linhas[0])
     resultado = []
     for numero, linha in enumerate(linhas[1:], start=2):

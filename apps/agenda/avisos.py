@@ -56,7 +56,7 @@ def ler_token_acao(token: str) -> dict:
 
 
 def link_acao(consulta, paciente) -> str:
-    return f"{settings.PSIQ_URL_BASE.rstrip('/')}/c/{token_acao(consulta, paciente)}/"
+    return f"{settings.MEUPSIQ_URL_BASE.rstrip('/')}/c/{token_acao(consulta, paciente)}/"
 
 
 def participantes(consulta):
@@ -101,7 +101,7 @@ def resumo_da_mensagem(consulta, tipo):
 
 
 def link_do_portal(consulta) -> str:
-    return f"{settings.PSIQ_URL_BASE.rstrip('/')}/portal/{consulta.consultorio_id}/entrar/"
+    return f"{settings.MEUPSIQ_URL_BASE.rstrip('/')}/portal/{consulta.consultorio_id}/entrar/"
 
 
 def montar_mensagem(consulta, tipo, destinatario):

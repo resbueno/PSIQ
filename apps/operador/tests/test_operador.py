@@ -21,7 +21,7 @@ from conftest import SENHA, entrar_com_2fa
 pytestmark = pytest.mark.django_db
 
 
-def criar_operador(email="op@psiq.com", com_2fa=True):
+def criar_operador(email="op@meupsiq.com", com_2fa=True):
     u = Usuario.objects.create_user(email, SENHA, nome="Atendente", is_staff=True)
     if com_2fa:
         segredo = pyotp.random_base32()
@@ -151,14 +151,14 @@ def test_painel_so_para_equipe_com_2fa(client, cena):
     entrar_com_2fa(client, cena.admin)
     assert client.get(reverse("operador:painel")).status_code == 403  # admin de consultorio nao e equipe
     client.logout()
-    sem_2fa = criar_operador("op2@psiq.com", com_2fa=False)
+    sem_2fa = criar_operador("op2@meupsiq.com", com_2fa=False)
     client.post(reverse("contas:entrar"), {"email": sem_2fa.email, "senha": SENHA})
     resposta = client.get(reverse("operador:painel"))
     assert resposta.status_code == 302 and resposta.url == reverse("contas:configurar_2fa")
 
 
 def test_equipe_sem_2fa_tambem_e_barrada_no_admin_do_django(client, db):
-    sem_2fa = criar_operador("op2@psiq.com", com_2fa=False)
+    sem_2fa = criar_operador("op2@meupsiq.com", com_2fa=False)
     client.post(reverse("contas:entrar"), {"email": sem_2fa.email, "senha": SENHA})
     resposta = client.get("/admin/")
     assert resposta.status_code == 302 and resposta.url == reverse("contas:configurar_2fa")
@@ -199,7 +199,7 @@ def test_operador_altera_plano_status_e_cobranca(client, cena):
 def test_operador_cria_consultorio_e_o_admin_consegue_entrar(client, cena):
     login_operador(client, cena)
     resposta = client.post(reverse("operador:novo"), {
-        "nome": "Clínica Nova", "documento": "", "plano": "", "admin_nome": "Nova Admin",
+        "nome": "Clínica Nova", "slug": "clinica-nova", "documento": "", "plano": "", "admin_nome": "Nova Admin",
         "admin_email": "nova@clinica.com", "admin_senha": "senha-bem-longa-789",
     })
     assert resposta.status_code == 302
@@ -207,14 +207,39 @@ def test_operador_cria_consultorio_e_o_admin_consegue_entrar(client, cena):
     entrar = client.post(reverse("contas:entrar"), {"email": "nova@clinica.com", "senha": "senha-bem-longa-789"})
     assert entrar.status_code == 302 and entrar.url == reverse("painel")
     assert "Clínica Nova".encode() in client.get(reverse("painel")).content
+    client.logout()
+    entrar_pelo_link = client.post(
+        reverse("entrar_consultorio", kwargs={"slug": "clinica-nova"}),
+        {"email": "nova@clinica.com", "senha": "senha-bem-longa-789"},
+    )
+    assert entrar_pelo_link.status_code == 302 and entrar_pelo_link.url == reverse("painel")
 
 
 def test_senha_fraca_ou_email_repetido_no_novo_consultorio(client, cena):
     login_operador(client, cena)
-    base = {"nome": "X", "documento": "", "plano": "", "admin_nome": "A", "admin_email": "novo@x.com", "admin_senha": "curta"}
+    base = {"nome": "X", "slug": "x", "documento": "", "plano": "", "admin_nome": "A", "admin_email": "novo@x.com", "admin_senha": "curta"}
     assert client.post(reverse("operador:novo"), base).status_code == 200
     repetido = client.post(reverse("operador:novo"), {**base, "admin_email": "adm@a.com", "admin_senha": "senha-bem-longa-789"})
     assert repetido.status_code == 200 and "Já existe".encode() in repetido.content
+
+
+def test_slug_reservado_ou_repetido_e_rejeitado(client, cena):
+    login_operador(client, cena)
+    base = {"documento": "", "plano": "", "admin_nome": "A", "admin_email": "reservado@x.com", "admin_senha": "senha-bem-longa-789"}
+    reservado = client.post(reverse("operador:novo"), {**base, "nome": "Financeiro Ltda", "slug": "financeiro"})
+    assert reservado.status_code == 200 and "reservado".encode() in reservado.content
+    repetido = client.post(reverse("operador:novo"), {**base, "nome": "Outra", "slug": cena.consultorio.slug})
+    assert repetido.status_code == 200 and "Já existe um consultório".encode() in repetido.content
+
+
+def test_login_pelo_link_da_clinica_exige_vinculo_naquele_consultorio(client, cena):
+    outro = Consultorio.objects.create(nome="Outra Clínica", slug="outra-clinica")
+    resposta = client.post(
+        reverse("entrar_consultorio", kwargs={"slug": outro.slug}),
+        {"email": cena.admin.email, "senha": SENHA},
+    )
+    assert resposta.status_code == 401
+    assert not client.session.get("_auth_user_id")
 
 
 def test_comando_criar_consultorio_continua_funcionando(db):

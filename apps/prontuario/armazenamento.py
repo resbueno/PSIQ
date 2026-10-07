@@ -9,7 +9,7 @@ from django.conf import settings
 
 class ArmazenamentoLocal:
     def __init__(self, base=None):
-        self.base = Path(base or settings.PSIQ_ANEXOS_DIR).resolve()
+        self.base = Path(base or settings.MEUPSIQ_ANEXOS_DIR).resolve()
 
     def _caminho(self, chave: str) -> Path:
         destino = (self.base / chave).resolve()

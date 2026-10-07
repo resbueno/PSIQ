@@ -20,28 +20,28 @@ def verificar(agora=None):
     ultima_hora = agora - timedelta(hours=1)
     alertas = []
 
-    marcador = settings.PSIQ_BACKUP_MARCADOR
+    marcador = settings.MEUPSIQ_BACKUP_MARCADOR
     if marcador:
         if not os.path.exists(marcador):
             alertas.append("Backup: o marcador de último backup não existe.")
         else:
             idade = agora.timestamp() - os.path.getmtime(marcador)
-            if idade > settings.PSIQ_BACKUP_MAX_HORAS * 3600:
-                alertas.append(f"Backup: último backup bem-sucedido há {int(idade // 3600)} h (limite {settings.PSIQ_BACKUP_MAX_HORAS} h).")
+            if idade > settings.MEUPSIQ_BACKUP_MAX_HORAS * 3600:
+                alertas.append(f"Backup: último backup bem-sucedido há {int(idade // 3600)} h (limite {settings.MEUPSIQ_BACKUP_MAX_HORAS} h).")
     else:
-        alertas.append("Backup: PSIQ_BACKUP_MARCADOR não configurado, não há como saber se o backup roda.")
+        alertas.append("Backup: MEUPSIQ_BACKUP_MARCADOR não configurado, não há como saber se o backup roda.")
 
-    suspeitas = Usuario.objects.filter(falhas_login__gte=settings.PSIQ_ALERTA_LOGINS_FALHOS).count()
+    suspeitas = Usuario.objects.filter(falhas_login__gte=settings.MEUPSIQ_ALERTA_LOGINS_FALHOS).count()
     if suspeitas:
         alertas.append(f"Segurança: {suspeitas} conta(s) com muitas falhas de login seguidas.")
 
     for consultorio in Consultorio.objects.exclude(status=Consultorio.Status.ENCERRADO):
         with contexto(consultorio_id=consultorio.pk):
             falhas = Aviso.objects.filter(status=Aviso.Status.FALHOU, criado_em__gte=ultima_hora).count()
-            if falhas >= settings.PSIQ_ALERTA_FALHAS_DE_AVISO:
+            if falhas >= settings.MEUPSIQ_ALERTA_FALHAS_DE_AVISO:
                 alertas.append(f"Avisos: {falhas} envios falharam na última hora em '{consultorio.nome}' (fila de e-mail ou provedor).")
             exportacoes = Exportacao.objects.filter(criado_em__gte=ultima_hora).count()
-            if exportacoes >= settings.PSIQ_ALERTA_EXPORTACOES:
+            if exportacoes >= settings.MEUPSIQ_ALERTA_EXPORTACOES:
                 alertas.append(f"Segurança: {exportacoes} exportações na última hora em '{consultorio.nome}'.")
             fora_da_janela = Auditoria.objects.filter(acao="suporte_requisicao", criado_em__gte=ultima_hora).exclude(
                 objeto_id__in=[str(a.pk) for a in _acessos_vigentes(consultorio, agora)]
@@ -58,7 +58,7 @@ def _acessos_vigentes(consultorio, agora):
 
 
 class Command(BaseCommand):
-    help = "Verifica backup, avisos e sinais de ataque e alerta o operador por e-mail (PSIQ_ALERTA_EMAIL). Rode a cada 10 minutos (cron)."
+    help = "Verifica backup, avisos e sinais de ataque e alerta o operador por e-mail (MEUPSIQ_ALERTA_EMAIL). Rode a cada 10 minutos (cron)."
 
     def handle(self, *args, **opcoes):
         alertas = verificar()
@@ -67,5 +67,5 @@ class Command(BaseCommand):
             return
         for alerta in alertas:
             self.stdout.write(self.style.WARNING(alerta))
-        if settings.PSIQ_ALERTA_EMAIL:
-            send_mail("Alerta PSIQ", "\n".join(f"- {a}" for a in alertas), None, [settings.PSIQ_ALERTA_EMAIL], fail_silently=True)
+        if settings.MEUPSIQ_ALERTA_EMAIL:
+            send_mail("Alerta PSIQ", "\n".join(f"- {a}" for a in alertas), None, [settings.MEUPSIQ_ALERTA_EMAIL], fail_silently=True)

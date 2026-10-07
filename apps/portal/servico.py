@@ -11,6 +11,7 @@ from django.db.models import Q
 from django.utils import timezone
 
 from apps.auditoria import servico as auditoria
+from apps.auditoria.models import Auditoria
 from apps.pacientes.models import Paciente
 
 from .models import CodigoAcesso, SolicitacaoLGPD
@@ -26,7 +27,7 @@ def pacientes_do_email(consultorio, email):
     base = Paciente.objects.filter(consultorio=consultorio, ativo=True, mesclado_em__isnull=True)
     encontrados = {}
     for paciente in base.filter(email__iexact=email):
-        minima = settings.PSIQ_PORTAL_IDADE_MINIMA_ACESSO_PROPRIO
+        minima = settings.MEUPSIQ_PORTAL_IDADE_MINIMA_ACESSO_PROPRIO
         if paciente.idade is None or paciente.idade >= minima:
             encontrados[paciente.pk] = paciente
     for paciente in base.filter(responsaveis__email__iexact=email).distinct():
@@ -40,16 +41,16 @@ def solicitar_codigo(request, consultorio, email) -> bool:
     if not pacientes_do_email(consultorio, email):
         return False
     ultima_hora = timezone.now() - timedelta(hours=1)
-    if CodigoAcesso.objects.filter(consultorio=consultorio, email=email, criado_em__gte=ultima_hora).count() >= settings.PSIQ_PORTAL_MAX_CODIGOS_POR_HORA:
+    if CodigoAcesso.objects.filter(consultorio=consultorio, email=email, criado_em__gte=ultima_hora).count() >= settings.MEUPSIQ_PORTAL_MAX_CODIGOS_POR_HORA:
         return False
     codigo = f"{secrets.randbelow(10**6):06d}"
     CodigoAcesso.objects.create(
         consultorio=consultorio, email=email, codigo_hash=_hash(codigo),
-        expira_em=timezone.now() + timedelta(minutes=settings.PSIQ_PORTAL_CODIGO_VALIDADE_MINUTOS),
+        expira_em=timezone.now() + timedelta(minutes=settings.MEUPSIQ_PORTAL_CODIGO_VALIDADE_MINUTOS),
     )
     send_mail(
         f"Seu código de acesso - {consultorio.nome}",
-        f"Seu código de acesso é {codigo}.\nEle vale por {settings.PSIQ_PORTAL_CODIGO_VALIDADE_MINUTOS} minutos e só pode ser usado uma vez.\n"
+        f"Seu código de acesso é {codigo}.\nEle vale por {settings.MEUPSIQ_PORTAL_CODIGO_VALIDADE_MINUTOS} minutos e só pode ser usado uma vez.\n"
         "Se você não pediu este código, ignore esta mensagem.\n\n" + consultorio.nome,
         None, [email], fail_silently=True,
     )
@@ -65,7 +66,7 @@ def validar_codigo(request, consultorio, email, codigo):
         CodigoAcesso.objects.filter(consultorio=consultorio, email=email, usado_em__isnull=True, expira_em__gt=agora)
         .order_by("-criado_em").first()
     )
-    if registro is None or registro.tentativas >= settings.PSIQ_PORTAL_MAX_TENTATIVAS:
+    if registro is None or registro.tentativas >= settings.MEUPSIQ_PORTAL_MAX_TENTATIVAS:
         return None
     if not hmac.compare_digest(registro.codigo_hash, _hash(codigo)):
         registro.tentativas += 1
@@ -79,6 +80,35 @@ def validar_codigo(request, consultorio, email, codigo):
         return None
     auditoria.registrar(request, "portal_login", "consultorio", consultorio.pk, consultorio_id=consultorio.pk, pacientes=len(pacientes))
     return pacientes
+
+
+# --------------------------------------------------------------------------- agendamento publico (pre-cadastro)
+
+
+def pedido_publico_excedido(consultorio, email):
+    """Contra abuso: poucos pedidos por e-mail por hora neste consultorio (nao bloqueia por IP, so orienta)."""
+    email = email.strip().lower()
+    ultima_hora = timezone.now() - timedelta(hours=1)
+    return Auditoria.objects.filter(
+        acao="agendamento_publico_solicitado", consultorio_id=consultorio.pk, criado_em__gte=ultima_hora,
+        detalhe__email=email,
+    ).count() >= settings.MEUPSIQ_PUBLICO_MAX_PEDIDOS_POR_HORA
+
+
+def paciente_para_agendamento_publico(consultorio, *, nome, email, telefone, nascimento=None):
+    """Reaproveita o cadastro se o e-mail ja existe no consultorio; senao, abre um pre-cadastro.
+    A equipe completa os demais dados (CPF, convenio etc.) ao atender o pedido."""
+    email = email.strip().lower()
+    paciente = (
+        Paciente.objects.filter(consultorio=consultorio, email__iexact=email, ativo=True, mesclado_em__isnull=True)
+        .order_by("criado_em").first()
+    )
+    if paciente:
+        return paciente
+    return Paciente.objects.create(
+        consultorio=consultorio, nome=nome.strip()[:160], email=email, telefone=telefone.strip()[:20],
+        nascimento=nascimento,
+    )
 
 
 def abrir_solicitacao_lgpd(request, paciente, tipo, mensagem=""):

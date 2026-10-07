@@ -320,3 +320,74 @@ def test_aviso_de_consulta_traz_o_link_do_portal(cena):
     mail.outbox.clear()
     consulta_para(cena, cena.maria, timezone.now() + timedelta(days=3))
     assert f"/portal/{cena.consultorio.pk}/entrar/" in mail.outbox[0].body
+
+
+# --------------------------------------------------------------------------- agendamento publico (link /<slug>/agenda/)
+
+
+def primeiro_horario_publico(client, cena):
+    pagina = client.get(reverse("publico_agenda", args=[cena.consultorio.slug])).content.decode()
+    return re.search(r'<option value="([^"]+)">', pagina[pagina.index('id="inicio"'):]).group(1)
+
+
+def dados_pre_cadastro(**extra):
+    return {"nome": "Novo Paciente", "email": "novo@fora.com", "telefone": "11999990000", "nascimento": "", "site": "", **extra}
+
+
+def test_pagina_publica_mostra_horarios_sem_login(client, cena):
+    resposta = client.get(reverse("publico_agenda", args=[cena.consultorio.slug]))
+    assert resposta.status_code == 200
+    assert cena.consultorio.nome.encode() in resposta.content
+
+
+def test_agendamento_publico_cria_pre_cadastro_e_sempre_vira_pedido(client, cena):
+    inicio = primeiro_horario_publico(client, cena)
+    resposta = client.post(
+        reverse("publico_agenda", args=[cena.consultorio.slug]),
+        {"profissional": str(cena.prof.pk), "inicio": inicio, "tipo": "presencial", **dados_pre_cadastro()},
+        follow=True,
+    )
+    assert resposta.status_code == 200
+    assert "Pedido enviado".encode() in resposta.content
+
+    definir_contexto(consultorio_id=cena.consultorio.pk)
+    from apps.pacientes.models import Paciente
+
+    paciente = Paciente.objects.get(email="novo@fora.com")
+    assert paciente.nome == "Novo Paciente"
+    solicitacao = SolicitacaoHorario.objects.get(paciente=paciente)
+    assert solicitacao.status == "pendente" and not Consulta.objects.filter(paciente=paciente).exists()
+
+
+def test_agendamento_publico_reaproveita_paciente_existente_pelo_email(client, cena):
+    inicio = primeiro_horario_publico(client, cena)
+    client.post(
+        reverse("publico_agenda", args=[cena.consultorio.slug]),
+        {"profissional": str(cena.prof.pk), "inicio": inicio, "tipo": "presencial", **dados_pre_cadastro(email="maria@x.com", nome="Maria da Silva")},
+    )
+    definir_contexto(consultorio_id=cena.consultorio.pk)
+    from apps.pacientes.models import Paciente
+
+    assert Paciente.objects.filter(email="maria@x.com").count() == 1
+    assert SolicitacaoHorario.objects.filter(paciente=cena.maria).exists()
+
+
+def test_agendamento_publico_rejeita_robo_pelo_campo_isca(client, cena):
+    inicio = primeiro_horario_publico(client, cena)
+    client.post(
+        reverse("publico_agenda", args=[cena.consultorio.slug]),
+        {"profissional": str(cena.prof.pk), "inicio": inicio, "tipo": "presencial", **dados_pre_cadastro(site="http://spam.com")},
+    )
+    definir_contexto(consultorio_id=cena.consultorio.pk)
+    assert not SolicitacaoHorario.objects.exists()
+
+
+def test_agendamento_publico_limita_pedidos_repetidos_do_mesmo_email(client, cena):
+    for _ in range(4):
+        inicio = primeiro_horario_publico(client, cena)
+        client.post(
+            reverse("publico_agenda", args=[cena.consultorio.slug]),
+            {"profissional": str(cena.prof.pk), "inicio": inicio, "tipo": "presencial", **dados_pre_cadastro()},
+        )
+    definir_contexto(consultorio_id=cena.consultorio.pk)
+    assert SolicitacaoHorario.objects.count() == 3  # o 4o pedido esbarra no limite por hora

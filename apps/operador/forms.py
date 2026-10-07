@@ -3,7 +3,7 @@ from datetime import date
 from django import forms
 from django.contrib.auth.password_validation import validate_password
 
-from apps.plataforma.models import Consultorio, Plano
+from apps.plataforma.models import SLUGS_RESERVADOS, Consultorio, Plano
 
 from .servico import DURACOES_SUPORTE_HORAS
 
@@ -24,6 +24,10 @@ class PagamentoForm(forms.Form):
 
 class NovoConsultorioForm(forms.Form):
     nome = forms.CharField(label="Nome do consultório", max_length=160)
+    slug = forms.SlugField(
+        label="Link de acesso", max_length=60,
+        help_text="Endereço do consultório, ex.: “clinica-bem-estar” vira /clinica-bem-estar/.",
+    )
     documento = forms.CharField(label="CNPJ ou CPF", max_length=18, required=False)
     plano = forms.ModelChoiceField(queryset=Plano.objects.all(), required=False, empty_label="Sem plano", label="Plano")
     admin_nome = forms.CharField(label="Nome do administrador", max_length=160)
@@ -34,8 +38,16 @@ class NovoConsultorioForm(forms.Form):
         validate_password(self.cleaned_data["admin_senha"])
         return self.cleaned_data["admin_senha"]
 
+    def clean_slug(self):
+        slug = self.cleaned_data["slug"].lower()
+        if slug in SLUGS_RESERVADOS:
+            raise forms.ValidationError("Este link é reservado para o sistema. Escolha outro.")
+        if Consultorio.objects.filter(slug=slug).exists():
+            raise forms.ValidationError("Já existe um consultório com este link.")
+        return slug
+
 
 class AutorizarSuporteForm(forms.Form):
-    operador_email = forms.EmailField(label="E-mail do atendente do PSIQ")
+    operador_email = forms.EmailField(label="E-mail do atendente do MeuPSIQ")
     horas = forms.TypedChoiceField(label="Por quanto tempo", coerce=int, choices=[(h, f"{h} hora{'s' if h > 1 else ''}") for h in DURACOES_SUPORTE_HORAS])
     motivo = forms.CharField(label="Motivo", max_length=300, widget=forms.Textarea(attrs={"rows": 3}))

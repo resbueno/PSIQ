@@ -75,7 +75,7 @@ def exige_aprovacao(paciente, profissional):
 def _link_online(tipo):
     if tipo != TipoAtendimento.ONLINE:
         return ""
-    return f"{settings.PSIQ_JITSI_URL.rstrip('/')}/psiq-{uuid.uuid4().hex}"
+    return f"{settings.MEUPSIQ_JITSI_URL.rstrip('/')}/meupsiq-{uuid.uuid4().hex}"
 
 
 def _criar(consultorio, profissional, inicio, duracao, tipo, paciente, grupo, serie=None):

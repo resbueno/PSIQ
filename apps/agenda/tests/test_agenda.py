@@ -63,7 +63,7 @@ def test_agendar_vincula_o_profissional_ao_paciente(cenario, fazer_request):
 def test_consulta_online_gera_link_jitsi_unico(cenario, fazer_request):
     (a,), _ = agendar(cenario, fazer_request, tipo="online")
     (b,), _ = agendar(cenario, fazer_request, tipo="online", inicio=amanha(15))
-    assert a.link_online.startswith("https://meet.jit.si/psiq-") and a.link_online != b.link_online
+    assert a.link_online.startswith("https://meet.jit.si/meupsiq-") and a.link_online != b.link_online
     (presencial,), _ = agendar(cenario, fazer_request, inicio=amanha(16))
     assert presencial.link_online == ""
 

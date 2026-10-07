@@ -19,6 +19,7 @@ from apps.auditoria import servico as auditoria
 from apps.auditoria.models import Auditoria
 from apps.core.permissoes import perfil_requerido
 from apps.core.tenancy import contexto
+from apps.plataforma.models import Consultorio
 
 from .forms import CodigoForm, EntrarForm, NovoUsuarioForm
 from . import totp
@@ -30,13 +31,19 @@ def _utilizavel():
 
 
 PRE_2FA = "pre_2fa_usuario_id"
+PRE_2FA_CONSULTORIO = "pre_2fa_consultorio_id"
 MENSAGEM_LOGIN_INVALIDO = "E-mail ou senha incorretos, ou acesso temporariamente bloqueado."
 
 
 # --------------------------------------------------------------------------- login
 
 
-def entrar(request):
+def _consultorio_do_slug(slug):
+    return get_object_or_404(Consultorio.objects.exclude(status=Consultorio.Status.ENCERRADO), slug=slug)
+
+
+def entrar(request, slug=None):
+    consultorio = _consultorio_do_slug(slug) if slug else None
     if request.user.is_authenticated:
         return redirect("painel")
     form = EntrarForm(request.POST or None)
@@ -47,7 +54,7 @@ def entrar(request):
         if usuario and usuario.bloqueado:
             auditoria.registrar(request, "login_bloqueado", "usuario", usuario.pk, usuario=usuario)
             messages.error(request, MENSAGEM_LOGIN_INVALIDO)
-            return render(request, "contas/entrar.html", {"form": form}, status=429)
+            return render(request, "contas/entrar.html", {"form": form, "consultorio": consultorio}, status=429)
 
         autenticado = authenticate(request, username=email, password=form.cleaned_data["senha"])
         if autenticado is None:
@@ -57,15 +64,31 @@ def entrar(request):
                 request, "login_falha", "usuario", usuario.pk if usuario else "", usuario=usuario, email=email
             )
             messages.error(request, MENSAGEM_LOGIN_INVALIDO)
-            return render(request, "contas/entrar.html", {"form": form}, status=401)
+            return render(request, "contas/entrar.html", {"form": form, "consultorio": consultorio}, status=401)
+
+        if consultorio is not None and not _tem_vinculo_no_consultorio(autenticado, consultorio):
+            # Credenciais validas, mas sem acesso a ESTE consultorio: mesma mensagem, para nao revelar qual parte falhou.
+            auditoria.registrar(
+                request, "login_consultorio_incorreto", "usuario", autenticado.pk, usuario=autenticado,
+                consultorio_id=consultorio.pk,
+            )
+            messages.error(request, MENSAGEM_LOGIN_INVALIDO)
+            return render(request, "contas/entrar.html", {"form": form, "consultorio": consultorio}, status=401)
 
         if autenticado.segundo_fator_ativo:
             request.session.flush()
             request.session[PRE_2FA] = str(autenticado.pk)
             request.session["pre_2fa_em"] = timezone.now().timestamp()
+            if consultorio is not None:
+                request.session[PRE_2FA_CONSULTORIO] = str(consultorio.pk)
             return redirect("contas:verificar_2fa")
-        return _concluir_login(request, autenticado, segundo_fator=False)
-    return render(request, "contas/entrar.html", {"form": form})
+        return _concluir_login(request, autenticado, segundo_fator=False, consultorio_alvo=consultorio)
+    return render(request, "contas/entrar.html", {"form": form, "consultorio": consultorio})
+
+
+def _tem_vinculo_no_consultorio(usuario, consultorio):
+    with contexto(usuario_id=usuario.pk):
+        return Vinculo.objects.filter(usuario=usuario, consultorio=consultorio, ativo=True).filter(_utilizavel()).exists()
 
 
 def verificar_2fa(request):
@@ -75,6 +98,7 @@ def verificar_2fa(request):
         request.session.flush()
         return redirect("contas:entrar")
     usuario = get_object_or_404(Usuario, pk=usuario_id, is_active=True)
+    consultorio_alvo_id = request.session.get(PRE_2FA_CONSULTORIO)
 
     form = CodigoForm(request.POST or None)
     if request.method == "POST" and form.is_valid():
@@ -83,14 +107,15 @@ def verificar_2fa(request):
             return render(request, "contas/verificar_2fa.html", {"form": form}, status=429)
         if totp.consumir(usuario, form.codigo_limpo()):  # cada codigo vale uma unica vez
             request.session.flush()
-            return _concluir_login(request, usuario, segundo_fator=True)
+            consultorio_alvo = Consultorio.objects.filter(pk=consultorio_alvo_id).first() if consultorio_alvo_id else None
+            return _concluir_login(request, usuario, segundo_fator=True, consultorio_alvo=consultorio_alvo)
         usuario.registrar_falha_login()
         auditoria.registrar(request, "2fa_falha", "usuario", usuario.pk, usuario=usuario)
         form.add_error("codigo", "Código incorreto ou expirado.")
     return render(request, "contas/verificar_2fa.html", {"form": form})
 
 
-def _concluir_login(request, usuario, segundo_fator):
+def _concluir_login(request, usuario, segundo_fator, consultorio_alvo=None):
     usuario.registrar_sucesso_login()
     login(request, usuario, backend="django.contrib.auth.backends.ModelBackend")
     if segundo_fator:
@@ -105,6 +130,18 @@ def _concluir_login(request, usuario, segundo_fator):
 
     with contexto(usuario_id=usuario.pk):
         vinculos = list(Vinculo.objects.filter(usuario=usuario, ativo=True).filter(_utilizavel()))
+
+    if consultorio_alvo is not None:
+        escolhido = next((v for v in vinculos if v.consultorio_id == consultorio_alvo.pk), None)
+        if escolhido is None:
+            # Vinculo removido entre a senha e o 2FA: nao deixa entrar em outro consultorio por engano.
+            logout(request)
+            messages.error(request, "Sua conta não tem mais acesso a este consultório.")
+            return redirect("contas:entrar")
+        request.session["consultorio_id"] = str(escolhido.consultorio_id)
+        with contexto(consultorio_id=escolhido.consultorio_id, usuario_id=usuario.pk):
+            auditoria.registrar(request, "login", "usuario", usuario.pk, usuario=usuario, consultorio_id=escolhido.consultorio_id)
+        return redirect("painel")
 
     if len(vinculos) == 1:
         consultorio_id = vinculos[0].consultorio_id
@@ -188,7 +225,7 @@ def configurar_2fa(request):
             return redirect("painel")
         form.add_error("codigo", "Código incorreto. Confira o horário do celular e tente de novo.")
 
-    uri = pyotp.TOTP(segredo).provisioning_uri(name=usuario.email, issuer_name=settings.PSIQ_NOME_EMISSOR_2FA)
+    uri = pyotp.TOTP(segredo).provisioning_uri(name=usuario.email, issuer_name=settings.MEUPSIQ_NOME_EMISSOR_2FA)
     return render(request, "contas/configurar_2fa.html", {"form": form, "segredo": segredo, "qr_svg": _qr_svg(uri)})
 
 

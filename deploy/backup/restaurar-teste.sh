@@ -4,7 +4,7 @@
 # Uso:  restaurar-teste.sh /caminho/chave-privada.pem [arquivo.tar.cms]   (padrao: o backup mais recente)
 set -euo pipefail
 
-RAIZ="${PSIQ_RAIZ:-/psiq}"
+RAIZ="${MEUPSIQ_RAIZ:-/psiq}"
 CHAVE="${1:?Informe a chave privada de backup (fica fora do servidor)}"
 ARQ="${2:-$(ls -1t "$RAIZ"/backup/dados/psiq-*.tar.cms | head -1)}"
 COMPOSE="docker compose -p psiq -f $RAIZ/app/deploy/docker-compose.homolog.yml -f $RAIZ/app/deploy/docker-compose.homolog.gateway.yml --env-file $RAIZ/.env"

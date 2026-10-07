@@ -33,7 +33,7 @@ def cena(criar_consultorio, criar_usuario, criar_paciente, fazer_request, settin
     definir_contexto(consultorio_id=c.consultorio.pk)
     c.marcador = tmp_path / "ultimo-backup-ok"
     c.marcador.write_text("ok")
-    settings.PSIQ_BACKUP_MARCADOR = str(c.marcador)
+    settings.MEUPSIQ_BACKUP_MARCADOR = str(c.marcador)
     return c
 
 
@@ -57,26 +57,26 @@ def test_backup_ausente_ou_antigo_gera_alerta(cena, settings):
     assert any("Backup" in a and "30 h" in a for a in verificar())
     os.remove(cena.marcador)
     assert any("não existe" in a for a in verificar())
-    settings.PSIQ_BACKUP_MARCADOR = ""
+    settings.MEUPSIQ_BACKUP_MARCADOR = ""
     assert any("não configurado" in a for a in verificar())
 
 
 def test_contas_com_muitas_falhas_de_login(cena, settings):
-    cena.dra.falhas_login = settings.PSIQ_ALERTA_LOGINS_FALHOS
+    cena.dra.falhas_login = settings.MEUPSIQ_ALERTA_LOGINS_FALHOS
     cena.dra.save()
     assert any("falhas de login" in a for a in verificar())
 
 
 def test_falhas_de_aviso_acima_do_limite(cena, settings):
     x = consulta(cena)
-    for _ in range(settings.PSIQ_ALERTA_FALHAS_DE_AVISO):
+    for _ in range(settings.MEUPSIQ_ALERTA_FALHAS_DE_AVISO):
         Aviso.objects.create(consultorio=cena.consultorio, consulta=x, canal="email", tipo="lembrete", destinatario="a@a.com", status="falhou")
     alertas = verificar()
     assert any("envios falharam" in a and "Clínica Aurora" in a for a in alertas)
 
 
 def test_exportacoes_em_massa(cena, settings):
-    for _ in range(settings.PSIQ_ALERTA_EXPORTACOES):
+    for _ in range(settings.MEUPSIQ_ALERTA_EXPORTACOES):
         Exportacao.objects.create(consultorio=cena.consultorio, solicitada_por_id=cena.dra.pk, tipo="consultorio")
     assert any("exportações" in a for a in verificar())
 
@@ -87,10 +87,10 @@ def test_suporte_fora_de_autorizacao_vigente(cena):
 
 
 def test_comando_envia_email_ao_operador_so_quando_ha_alerta(cena, settings):
-    settings.PSIQ_ALERTA_EMAIL = "operador@psiq.com"
+    settings.MEUPSIQ_ALERTA_EMAIL = "operador@meupsiq.com"
     mail.outbox.clear()
     call_command("verificar_saude")
     assert not mail.outbox
     os.remove(cena.marcador)
     call_command("verificar_saude")
-    assert len(mail.outbox) == 1 and mail.outbox[0].to == ["operador@psiq.com"] and "Backup" in mail.outbox[0].body
+    assert len(mail.outbox) == 1 and mail.outbox[0].to == ["operador@meupsiq.com"] and "Backup" in mail.outbox[0].body

@@ -27,7 +27,7 @@ from apps.prontuario.models import Documento, Prontuario
 from .models import Exportacao
 from .saida import _seguro
 
-LEIA_ME = """Exportação de dados do PSIQ
+LEIA_ME = """Exportação de dados do MeuPSIQ
 
 Este arquivo contém dados pessoais e financeiros do consultório. Guarde-o em local protegido e apague as cópias que
 não forem necessárias (LGPD).
@@ -115,7 +115,7 @@ def gerar_zip_prontuarios(request, profissional) -> bytes:
     saida, arquivos = io.BytesIO(), 0
     prontuarios = Prontuario.objects.filter(consultorio=request.consultorio, profissional=profissional, excluido_em__isnull=True).select_related("paciente", "grupo")
     with zipfile.ZipFile(saida, "w", zipfile.ZIP_DEFLATED) as z:
-        z.writestr("LEIA-ME.txt", "Seus prontuários exportados pelo PSIQ. Conteúdo sigiloso: guarde com o mesmo cuidado do original.\n")
+        z.writestr("LEIA-ME.txt", "Seus prontuários exportados pelo MeuPSIQ. Conteúdo sigiloso: guarde com o mesmo cuidado do original.\n")
         for i, p in enumerate(prontuarios, start=1):
             pasta = f"{i:03d}-{slugify(p.paciente.nome if p.paciente_id else p.grupo.nome) or 'prontuario'}"
             registros = []

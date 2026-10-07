@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-# Backup diario do PSIQ (homologacao): dump do PostgreSQL + volume de anexos, cifrado com a chave PUBLICA
+# Backup diario do MeuPSIQ (homologacao): dump do PostgreSQL + volume de anexos, cifrado com a chave PUBLICA
 # (o servidor consegue cifrar, mas nao decifrar: a chave privada fica fora dele).
-# A chave mestra (PSIQ_CHAVE_MESTRA) NAO entra no pacote: guarde-a a parte.
+# A chave mestra (MEUPSIQ_CHAVE_MESTRA) NAO entra no pacote: guarde-a a parte.
 # Ao terminar com sucesso atualiza o marcador que `manage.py verificar_saude` vigia.
 set -euo pipefail
 
-RAIZ="${PSIQ_RAIZ:-/psiq}"
+RAIZ="${MEUPSIQ_RAIZ:-/psiq}"
 DEST="$RAIZ/backup/dados"
 CERT="$RAIZ/backup/backup-publico.pem"
 MARCADOR="$RAIZ/estado/ultimo-backup-ok"

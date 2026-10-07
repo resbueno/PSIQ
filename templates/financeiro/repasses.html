@@ -1,8 +1,8 @@
 {% extends "base.html" %}
-{% block titulo %}Repasses · PSIQ{% endblock %}
+{% block titulo %}Repasses · MeuPSIQ{% endblock %}
 {% block conteudo %}
 <h1>Repasses</h1>
-<p>O repasse nasce quando o dinheiro entra (paciente pagou ou o convênio pagou); glosa reduz o valor. O PSIQ calcula e mostra o extrato, mas não movimenta dinheiro.</p>
+<p>O repasse nasce quando o dinheiro entra (paciente pagou ou o convênio pagou); glosa reduz o valor. O MeuPSIQ calcula e mostra o extrato, mas não movimenta dinheiro.</p>
 <form method="get" class="busca"><input type="month" name="mes" value="{{ mes }}" aria-label="Competência"><button class="botao" type="submit">Filtrar</button></form>
 <p>A pagar: <strong>R$ {{ a_pagar }}</strong></p>
 <div class="tabela-rolagem"><table>

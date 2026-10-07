@@ -18,7 +18,7 @@ PREFIXO = "push:"
 
 
 def configurado() -> bool:
-    return bool(settings.PSIQ_VAPID_PUBLIC_KEY and settings.PSIQ_VAPID_PRIVATE_KEY)
+    return bool(settings.MEUPSIQ_VAPID_PUBLIC_KEY and settings.MEUPSIQ_VAPID_PRIVATE_KEY)
 
 
 class CanalPush(Canal):
@@ -36,8 +36,8 @@ class CanalPush(Canal):
             webpush(
                 subscription_info={"endpoint": assinatura.endpoint, "keys": {"p256dh": assinatura.p256dh, "auth": assinatura.auth}},
                 data=json.dumps({"title": assunto, "body": resumo, "url": link}),
-                vapid_private_key=settings.PSIQ_VAPID_PRIVATE_KEY,
-                vapid_claims={"sub": settings.PSIQ_VAPID_SUBJECT},
+                vapid_private_key=settings.MEUPSIQ_VAPID_PRIVATE_KEY,
+                vapid_claims={"sub": settings.MEUPSIQ_VAPID_SUBJECT},
                 ttl=60 * 60 * 12,
             )
         except WebPushException as exc:

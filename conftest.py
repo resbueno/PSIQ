@@ -13,13 +13,14 @@ _registros = itertools.count(1000)
 
 @pytest.fixture(autouse=True)
 def chave_mestra(settings):
-    settings.PSIQ_CHAVE_MESTRA = Fernet.generate_key().decode()
+    settings.MEUPSIQ_CHAVE_MESTRA = Fernet.generate_key().decode()
     settings.SECURE_SSL_REDIRECT = False
 
 
 @pytest.fixture
 def criar_consultorio(db):
     def _criar(nome="Consultório Teste", **extra):
+        extra.setdefault("slug", f"consultorio-teste-{next(_registros)}")
         return Consultorio.objects.create(nome=nome, **extra)
 
     return _criar
@@ -89,4 +90,4 @@ def entrar_com_2fa(client, usuario):
 
 @pytest.fixture(autouse=True)
 def armazenamento_temporario(settings, tmp_path):
-    settings.PSIQ_ANEXOS_DIR = str(tmp_path / "armazenamento")
+    settings.MEUPSIQ_ANEXOS_DIR = str(tmp_path / "armazenamento")

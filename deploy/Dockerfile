@@ -1,4 +1,4 @@
-# Imagem de producao do PSIQ (Django + gunicorn). Node nao e necessario: nao ha build de front ainda.
+# Imagem de producao do MeuPSIQ (Django + gunicorn). Node nao e necessario: nao ha build de front ainda.
 FROM python:3.12-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1

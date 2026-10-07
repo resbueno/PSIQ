@@ -10,9 +10,10 @@ class PlanoAdmin(admin.ModelAdmin):
 
 @admin.register(Consultorio)
 class ConsultorioAdmin(admin.ModelAdmin):
-    list_display = ("nome", "plano", "status", "criado_em")
+    list_display = ("nome", "slug", "plano", "status", "criado_em")
     list_filter = ("status", "plano")
-    search_fields = ("nome", "documento")
+    search_fields = ("nome", "slug", "documento")
+    prepopulated_fields = {"slug": ("nome",)}
 
 
 @admin.register(Contrato)

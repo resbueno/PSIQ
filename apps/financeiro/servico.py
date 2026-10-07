@@ -185,7 +185,7 @@ def marcar_repasse_pago(request, repasse):
 
 @transaction.atomic
 def faturar(request, atendimentos, demonstrativo=""):
-    """Marca atendimentos realizados como faturados (entrega do lote a operadora, feita fora do PSIQ)."""
+    """Marca atendimentos realizados como faturados (entrega do lote a operadora, feita fora do MeuPSIQ)."""
     agora = timezone.now()
     for atendimento in atendimentos:
         if atendimento.status != AtendimentoConvenio.Status.REALIZADO:

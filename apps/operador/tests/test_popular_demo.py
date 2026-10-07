@@ -15,7 +15,7 @@ pytestmark = pytest.mark.django_db
 def test_carga_demo_cria_todos_os_papeis_e_dados_coerentes(capsys, settings):
     call_command("popular_demo", forcar=True)
     saida = capsys.readouterr().out
-    consultorio = Consultorio.objects.get(nome="Clínica Demo PSIQ")
+    consultorio = Consultorio.objects.get(nome="Clínica Demo MeuPSIQ")
     assert "Portal do paciente" in saida and str(consultorio.pk) in saida
 
     with contexto(consultorio_id=consultorio.pk):
@@ -34,11 +34,11 @@ def test_carga_demo_cria_todos_os_papeis_e_dados_coerentes(capsys, settings):
         assert RegistroVersao.objects.filter(consultorio=consultorio).count() == 3  # anamnese v1 e v2 + evolucao
         assert Documento.objects.filter(consultorio=consultorio, chave__isnull=False, liberado_ao_paciente=True).count() == 1
 
-    operador = Usuario.objects.get(email="operador@demo.psiq.local")
+    operador = Usuario.objects.get(email="operador@demo.meupsiq.local")
     assert operador.is_staff and operador.segundo_fator_ativo
     for email in ("psicologa", "psiquiatra", "assistente"):
-        assert Usuario.objects.get(email=f"{email}@demo.psiq.local").segundo_fator_ativo
-    assert not Usuario.objects.get(email="admin@demo.psiq.local").is_staff
+        assert Usuario.objects.get(email=f"{email}@demo.meupsiq.local").segundo_fator_ativo
+    assert not Usuario.objects.get(email="admin@demo.meupsiq.local").is_staff
 
 
 def test_carga_demo_e_idempotente(capsys):
@@ -46,7 +46,7 @@ def test_carga_demo_e_idempotente(capsys):
     capsys.readouterr()
     call_command("popular_demo", forcar=True)
     assert "já existe" in capsys.readouterr().out
-    assert Consultorio.objects.filter(nome="Clínica Demo PSIQ").count() == 1
+    assert Consultorio.objects.filter(nome="Clínica Demo MeuPSIQ").count() == 1
 
 
 def test_recusa_rodar_fora_do_debug_sem_forcar(settings):

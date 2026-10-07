@@ -105,12 +105,12 @@ def test_cada_profissional_tem_a_sua_chave_e_a_rotacao_preserva_versoes_antigas(
 def test_rotacao_da_chave_mestra(cena, settings):
     segredo_cifrado = cena.dra.segundo_fator_segredo_cifrado
     segredo = cripto.decifrar(segredo_cifrado)
-    antiga = settings.PSIQ_CHAVE_MESTRA
+    antiga = settings.MEUPSIQ_CHAVE_MESTRA
     nova = Fernet.generate_key().decode()
-    settings.PSIQ_CHAVE_MESTRA = f"{nova},{antiga}"
+    settings.MEUPSIQ_CHAVE_MESTRA = f"{nova},{antiga}"
     assert servico.ler_versao(cena.req(cena.dra), cena.registro.versao_atual())[0] == TEXTO  # ainda decifra
     reescrito = cripto.recifrar(segredo_cifrado)
-    settings.PSIQ_CHAVE_MESTRA = nova  # a antiga saiu
+    settings.MEUPSIQ_CHAVE_MESTRA = nova  # a antiga saiu
     assert cripto.decifrar(reescrito) == segredo
     with pytest.raises(ValueError):
         cripto.decifrar(segredo_cifrado)  # o token antigo nao abre so com a nova
@@ -273,7 +273,7 @@ def arquivo(nome="exame.txt", conteudo=b"resultado do exame confidencial"):
 
 def test_anexo_fica_cifrado_em_disco_e_volta_integro(cena, settings):
     anexo = servico.anexar(cena.req(cena.dra), cena.prontuario, arquivo())
-    gravado = Path(settings.PSIQ_ANEXOS_DIR) / anexo.caminho
+    gravado = Path(settings.MEUPSIQ_ANEXOS_DIR) / anexo.caminho
     assert gravado.exists() and b"confidencial" not in gravado.read_bytes() and "exame" not in anexo.caminho
     assert servico.baixar_anexo(cena.req(cena.dra), anexo) == b"resultado do exame confidencial"
 
@@ -281,7 +281,7 @@ def test_anexo_fica_cifrado_em_disco_e_volta_integro(cena, settings):
 def test_anexo_recusa_extensao_e_tamanho(cena, settings):
     with pytest.raises(ErroProntuario, match="não permitido"):
         servico.anexar(cena.req(cena.dra), cena.prontuario, arquivo("virus.exe"))
-    settings.PSIQ_ANEXO_MAX_BYTES = 10
+    settings.MEUPSIQ_ANEXO_MAX_BYTES = 10
     with pytest.raises(ErroProntuario, match="limite"):
         servico.anexar(cena.req(cena.dra), cena.prontuario, arquivo())
 
@@ -301,7 +301,7 @@ def test_documento_clinico_e_cifrado_e_so_quem_le_o_prontuario_baixa(client, cen
     documento = servico.emitir_documento_clinico(
         cena.req(cena.dra), cena.prontuario, titulo="Atestado", texto="Atesto que Maria da Silva esteve em atendimento."
     )
-    gravado = (Path(settings.PSIQ_ANEXOS_DIR) / documento.caminho).read_bytes()
+    gravado = (Path(settings.MEUPSIQ_ANEXOS_DIR) / documento.caminho).read_bytes()
     assert not gravado.startswith(b"%PDF") and documento.chave_id
     assert servico.baixar_documento(cena.req(cena.dra), documento).startswith(b"%PDF")
 
@@ -351,7 +351,7 @@ def test_assistente_emite_declaracao_de_comparecimento_sem_ler_prontuario(client
 
 def test_exclusao_antecipada_exige_confirmacao_e_apaga_tudo(cena, settings):
     anexo = servico.anexar(cena.req(cena.dra), cena.prontuario, arquivo())
-    arquivo_em_disco = Path(settings.PSIQ_ANEXOS_DIR) / anexo.caminho
+    arquivo_em_disco = Path(settings.MEUPSIQ_ANEXOS_DIR) / anexo.caminho
     request = cena.req(cena.dra)
     with pytest.raises(ErroProntuario, match="digite o nome"):
         servico.excluir_antecipadamente(request, cena.prontuario, motivo="Pedido da paciente", confirmacao_nome="Outra Pessoa")

@@ -1,4 +1,4 @@
-/* Service worker do PSIQ. Proposital: NAO guarda nada em cache nem intercepta requisicoes,
+/* Service worker do MeuPSIQ. Proposital: NAO guarda nada em cache nem intercepta requisicoes,
    para que nenhum dado de paciente fique no aparelho (sem modo offline). Serve so para notificacoes push. */
 self.addEventListener('install', function () { self.skipWaiting(); });
 self.addEventListener('activate', function (event) { event.waitUntil(self.clients.claim()); });

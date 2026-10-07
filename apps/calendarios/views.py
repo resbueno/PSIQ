@@ -17,12 +17,12 @@ from . import sync
 from .models import ContaCalendario
 from .provedores import PROVEDORES, ErroProvedor
 
-SAL_STATE = "psiq.calendario"
+SAL_STATE = "meupsiq.calendario"
 
 
 def _redirect_uri(provedor):
-    # reverse() ja inclui o prefixo da instalacao (ex.: /psiq), entao so a origem de PSIQ_URL_BASE entra aqui.
-    base = urlparse(settings.PSIQ_URL_BASE)
+    # reverse() ja inclui o prefixo da instalacao (ex.: /meupsiq), entao so a origem de MEUPSIQ_URL_BASE entra aqui.
+    base = urlparse(settings.MEUPSIQ_URL_BASE)
     return f"{base.scheme}://{base.netloc}" + reverse("calendarios:retorno", args=[provedor])
 
 

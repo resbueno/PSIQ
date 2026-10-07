@@ -1,6 +1,6 @@
 # Exemplo de implantacao em VPS: proxy com TLS (Caddy), aplicacao e PostgreSQL.
 # Antes de subir: crie deploy/.env a partir de ../.env.example, rode scripts/db/init-producao.sql no banco,
-# e guarde a chave mestra (PSIQ_CHAVE_MESTRA) FORA do banco e do backup.
+# e guarde a chave mestra (MEUPSIQ_CHAVE_MESTRA) FORA do banco e do backup.
 #
 #   docker compose -f deploy/docker-compose.yml --env-file deploy/.env up -d
 #   docker compose -f deploy/docker-compose.yml exec app python manage.py migrate   # com DB_USER=psiq_migrator
@@ -26,8 +26,8 @@ services:
     environment:
       DJANGO_DEBUG: "false"
       DB_HOST: db
-      PSIQ_ANEXOS_DIR: /data/anexos
-      PSIQ_BACKUP_MARCADOR: /var/lib/psiq/ultimo-backup-ok
+      MEUPSIQ_ANEXOS_DIR: /data/anexos
+      MEUPSIQ_BACKUP_MARCADOR: /var/lib/psiq/ultimo-backup-ok
     volumes:
       - anexos:/data/anexos
       - estado:/var/lib/psiq

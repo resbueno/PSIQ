@@ -161,7 +161,7 @@ class InatividadeProntuarioMiddleware:
         if request.user.is_authenticated:
             agora = time.time()
             ultimo = request.session.get("ultima_atividade")
-            if request.path_info.startswith(self.AREA) and ultimo and agora - ultimo > settings.PSIQ_INATIVIDADE_PRONTUARIO_SEGUNDOS:
+            if request.path_info.startswith(self.AREA) and ultimo and agora - ultimo > settings.MEUPSIQ_INATIVIDADE_PRONTUARIO_SEGUNDOS:
                 SessaoDispositivo.objects.filter(session_key=request.session.session_key).update(revogada_em=timezone.now())
                 logout(request)
                 messages.warning(request, "Sua sessão expirou por inatividade. Entre novamente para abrir prontuários.")

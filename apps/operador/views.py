@@ -53,7 +53,7 @@ def novo_consultorio(request):
         d = form.cleaned_data
         try:
             consultorio, admin = servico.criar_consultorio_com_admin(
-                nome=d["nome"], documento=d["documento"], plano=d["plano"], admin_nome=d["admin_nome"],
+                nome=d["nome"], slug=d["slug"], documento=d["documento"], plano=d["plano"], admin_nome=d["admin_nome"],
                 admin_email=d["admin_email"], admin_senha=d["admin_senha"],
             )
         except (ErroOperador, ValidationError) as erro:
@@ -153,7 +153,7 @@ def suporte_cliente(request):
         operador = Usuario.objects.filter(email__iexact=d["operador_email"], is_staff=True, is_active=True).first()
         try:
             if operador is None:
-                raise ErroOperador("Não encontramos esse atendente. Confira o e-mail informado pelo PSIQ.")
+                raise ErroOperador("Não encontramos esse atendente. Confira o e-mail informado pelo MeuPSIQ.")
             servico.autorizar_suporte(request, operador, horas=d["horas"], motivo=d["motivo"])
         except ErroOperador as erro:
             form.add_error("operador_email", str(erro))

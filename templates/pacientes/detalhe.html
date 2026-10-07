@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block titulo %}{{ paciente.nome }} · PSIQ{% endblock %}
+{% block titulo %}{{ paciente.nome }} · MeuPSIQ{% endblock %}
 {% block conteudo %}
 <h1>{{ paciente.nome }}</h1>
 {% if paciente.mesclado_em %}<div class="aviso-leitura">Cadastro mesclado em {{ paciente.mesclado_em|date:"d/m/Y" }}. Use o cadastro principal: <a href="{% url 'pacientes:detalhe' paciente.mesclado_com_id %}">{{ paciente.mesclado_com.nome }}</a>.</div>{% else %}

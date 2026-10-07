@@ -7,7 +7,7 @@ from apps.prontuario.models import ChaveDados
 
 class Command(BaseCommand):
     help = (
-        "Depois de colocar a NOVA chave mestra na frente em PSIQ_CHAVE_MESTRA (nova,antiga), reescreve todas as "
+        "Depois de colocar a NOVA chave mestra na frente em MEUPSIQ_CHAVE_MESTRA (nova,antiga), reescreve todas as "
         "chaves de dados com a chave primária. Só depois disso a chave antiga pode ser removida."
     )
 
