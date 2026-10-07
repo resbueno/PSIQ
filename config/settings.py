@@ -106,7 +106,6 @@ LOCALE_PATHS = [BASE_DIR / "locale"]
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-STATIC_URL = "static/"
 STATICFILES_DIRS = [BASE_DIR / "static"]
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
@@ -129,6 +128,8 @@ if PSIQ_PREFIXO:
     SESSION_COOKIE_PATH = PSIQ_PREFIXO
     CSRF_COOKIE_PATH = PSIQ_PREFIXO
 CSRF_TRUSTED_ORIGINS = env.list("PSIQ_ORIGENS_CONFIAVEIS", default=[])
+# Absoluto e com o prefixo: o WhiteNoise serve em /psiq/static/ e o {% static %} gera o mesmo endereco.
+STATIC_URL = f"{PSIQ_PREFIXO}/static/"
 
 # Em producao tudo e HTTPS. Homologacao sem terminador TLS define PSIQ_HTTPS=false.
 if not DEBUG and env.bool("PSIQ_HTTPS", default=True):
