@@ -56,3 +56,17 @@ def service_worker(request):
 
 def manifesto(request):
     return render(request, "pwa/manifest.webmanifest", content_type="application/manifest+json")
+
+
+def saude(request):
+    """Verificacao para monitoramento externo: a aplicacao responde e consegue falar com o banco. Sem dados sensiveis."""
+    from django.db import connection
+    from django.http import JsonResponse
+
+    try:
+        with connection.cursor() as cur:
+            cur.execute("SELECT 1")
+            cur.fetchone()
+    except Exception:
+        return JsonResponse({"ok": False}, status=503)
+    return JsonResponse({"ok": True})

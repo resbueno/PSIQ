@@ -1,0 +1,11 @@
+# TLS automatico (Let's Encrypt). Troque pelo seu dominio.
+psiq.exemplo.com.br {
+	encode zstd gzip
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "same-origin"
+		-Server
+	}
+	reverse_proxy app:8000
+}

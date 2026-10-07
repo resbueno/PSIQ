@@ -179,3 +179,11 @@ PSIQ_CARENCIA_DIAS = 15
 # Importacao de pacientes por planilha
 PSIQ_IMPORTACAO_MAX_BYTES = 5 * 1024 * 1024
 PSIQ_IMPORTACAO_MAX_LINHAS = 5000
+
+# Monitoramento (python manage.py verificar_saude, via cron)
+PSIQ_ALERTA_EMAIL = env("PSIQ_ALERTA_EMAIL", default="")
+PSIQ_BACKUP_MARCADOR = env("PSIQ_BACKUP_MARCADOR", default="")  # arquivo que o job de backup atualiza ao terminar com sucesso
+PSIQ_BACKUP_MAX_HORAS = 26
+PSIQ_ALERTA_FALHAS_DE_AVISO = 10      # por hora
+PSIQ_ALERTA_LOGINS_FALHOS = 10        # falhas acumuladas em uma conta
+PSIQ_ALERTA_EXPORTACOES = 5           # por hora, em um consultorio
