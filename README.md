@@ -12,7 +12,7 @@ A especificação fica na pasta `docs/`, mantida só localmente (fora do Git).
 | 2 | Pacientes e agenda, com avisos por e-mail | Pronta, testes verdes no CI (push, FullCalendar e HTMX pendentes) |
 | 3 | Prontuário e documentos | Pronta, testes verdes no CI |
 | 4 | Financeiro, convênio e repasse | Pronta, testes verdes no CI |
-| 5 | Portal do paciente, teleconsulta, calendários | A fazer |
+| 5 | Portal do paciente, teleconsulta, calendários | Pronta, testes verdes no CI |
 | 6 | Painel interno, cobrança, relatórios, importação | A fazer |
 
 > Os testes rodam no GitHub Actions (PostgreSQL real). Este repositório foi desenvolvido sem Python local; o CI é o ambiente de verificação.
@@ -114,3 +114,13 @@ O PSIQ registra e calcula; não movimenta dinheiro, não emite NFS-e e não cobr
 - **Permissões:** profissional vê só os próprios lançamentos e repasses (somente leitura); assistente opera pagamentos, recibos e a fila de convênios; admin tem tudo, incluindo valores, regras, convênios e pagamento de repasse.
 
 Pendente da Etapa 4: relatórios financeiros (Etapa 6), lançamento de consultas em grupo (hoje manual) e vínculo do paciente ao convênio por cadastro (hoje por nome).
+
+## Etapa 5: portal do paciente, teleconsulta, PWA e calendários externos
+
+- **Portal sem senha** (`apps/portal`): o paciente entra em `/portal/<id do consultório>/entrar/` (o link vai nos avisos), recebe um código de 6 dígitos por e-mail (guardado só como hash, vale 10 min, uso único, 5 tentativas, 5 códigos por hora) e a resposta é sempre a mesma, exista o e-mail ou não. Menor de 16 anos só pelo responsável legal; um responsável com vários filhos alterna entre eles.
+- **No portal:** próximos compromissos (confirmar, cancelar dentro do prazo, entrar na sala Jitsi 15 min antes), marcar horário (a primeira consulta vira pedido; retorno marca na hora; só horários livres das regras do profissional), pagamentos e recibos, documentos liberados pelo profissional e declarações de comparecimento, e privacidade: quem abriu o prontuário, autorizações de compartilhamento (revogáveis) e pedidos de exclusão, cópia ou correção de dados, que chegam à equipe em "Pedidos de pacientes".
+- **PWA:** manifesto e service worker na raiz. O service worker não faz cache nem intercepta requisições (nenhum dado de paciente fica no aparelho); só recebe push.
+- **Push (Web Push/VAPID):** canal plugável nos avisos, com o mesmo texto neutro do e-mail; um aviso por aparelho; aparelho que cancelou (404/410) é desativado. Gere as chaves com `npx web-push generate-vapid-keys` e preencha `PSIQ_VAPID_*`.
+- **Calendários externos** (`apps/calendarios`): OAuth com Google Calendar e Outlook/Microsoft 365, tokens cifrados pela chave mestra, `state` assinado e amarrado à sessão. Consultas vão ao calendário como "Consulta" e o horário (o nome do paciente só aparece se o profissional ligar essa opção); compromissos pessoais voltam como bloqueios que somem dos horários oferecidos no portal. `python manage.py sincronizar_calendarios` a cada 10 min (cron) ou "Sincronizar agora" na tela. Antes de usar: registrar o app no Google Cloud e no Azure e passar pela revisão deles (pré-requisito do docs/02), e preencher `PSIQ_GOOGLE_*` e `PSIQ_MICROSOFT_*`.
+
+Pendente da Etapa 5: sincronização em tempo real (hoje por cron e sob demanda; a fila assíncrona entra com a infraestrutura), exportação de consultas em grupo para o calendário externo com nomes, e revisão de segurança dedicada (docs/06) antes do primeiro cliente.
