@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block titulo %}{{ titulo }} · Operação PSIQ{% endblock %}
+{% block conteudo %}
+<h1>{{ titulo }}</h1>
+<form method="post" class="campos" novalidate>{% csrf_token %}
+  {% include "_campos.html" %}
+  <div><button class="botao" type="submit">Salvar</button> <a class="botao secundario" href="{% url 'operador:painel' %}">Cancelar</a></div>
+</form>
+{% endblock %}

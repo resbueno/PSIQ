@@ -1,11 +1,7 @@
 from django.core.exceptions import ValidationError
 from django.core.management.base import BaseCommand, CommandError
-from django.contrib.auth.password_validation import validate_password
-from django.db import transaction
 
-from apps.contas.models import Perfil, Usuario, Vinculo
-from apps.core.tenancy import contexto
-from apps.plataforma.models import Consultorio
+from apps.operador.servico import ErroOperador, criar_consultorio_com_admin
 
 
 class Command(BaseCommand):
@@ -17,18 +13,13 @@ class Command(BaseCommand):
         parser.add_argument("--admin-nome", required=True)
         parser.add_argument("--admin-senha", required=True, help="Mínimo de 12 caracteres")
 
-    @transaction.atomic
     def handle(self, *args, **opcoes):
-        email = opcoes["admin_email"].strip().lower()
         try:
-            validate_password(opcoes["admin_senha"])
+            consultorio, admin = criar_consultorio_com_admin(
+                nome=opcoes["nome"], admin_nome=opcoes["admin_nome"], admin_email=opcoes["admin_email"], admin_senha=opcoes["admin_senha"]
+            )
         except ValidationError as erro:
             raise CommandError("; ".join(erro.messages))
-        if Usuario.objects.filter(email=email).exists():
-            raise CommandError("Já existe um usuário com esse e-mail.")
-
-        consultorio = Consultorio.objects.create(nome=opcoes["nome"])
-        usuario = Usuario.objects.create_user(email, opcoes["admin_senha"], nome=opcoes["admin_nome"])
-        with contexto(consultorio_id=consultorio.pk, usuario_id=usuario.pk):
-            Vinculo.objects.create(usuario=usuario, consultorio=consultorio, perfil=Perfil.ADMIN)
-        self.stdout.write(self.style.SUCCESS(f"Consultório '{consultorio.nome}' criado. Administrador: {email}"))
+        except ErroOperador as erro:
+            raise CommandError(str(erro))
+        self.stdout.write(self.style.SUCCESS(f"Consultório '{consultorio.nome}' criado. Administrador: {admin.email}"))

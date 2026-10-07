@@ -106,6 +106,8 @@ def _concluir_login(request, usuario, segundo_fator):
         return redirect("painel")
 
     auditoria.registrar(request, "login", "usuario", usuario.pk, usuario=usuario, consultorio_id=None)
+    if not vinculos and usuario.is_staff:
+        return redirect("operador:painel")
     return redirect("contas:escolher_consultorio")
 
 

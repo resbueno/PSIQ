@@ -40,9 +40,32 @@ class ContextoConsultorioMiddleware:
             )
             request.session["uso_marcado_em"] = agora
 
+    
+    def _suporte(request, usuario):
+        """Operador da plataforma dentro da conta do cliente, so enquanto houver autorizacao vigente (somente leitura)."""
+        consultorio_id = request.session.get("suporte_consultorio_id")
+        acesso_id = request.session.get("suporte_acesso_id")
+        if not (consultorio_id and acesso_id):
+            return
+        from apps.operador.servico import acesso_vigente
+
+        definir_contexto(consultorio_id=consultorio_id, usuario_id=usuario.pk)
+        acesso = acesso_vigente(usuario, consultorio_id)
+        consultorio = Consultorio.objects.filter(pk=consultorio_id).exclude(status=Consultorio.Status.ENCERRADO).first()
+        if acesso is None or str(acesso.pk) != acesso_id or consultorio is None:
+            request.session.pop("suporte_acesso_id", None)
+            request.session.pop("suporte_consultorio_id", None)
+            definir_contexto(usuario_id=usuario.pk)
+            return
+        request.vinculo = Vinculo(usuario=usuario, consultorio=consultorio, perfil=Perfil.ADMIN)
+        request.consultorio = consultorio
+        request.suporte = acesso
+        timezone.activate(ZoneInfo(consultorio.fuso))
+
     def __call__(self, request):
         request.consultorio = None
         request.vinculo = None
+        request.suporte = None
         timezone.deactivate()
         try:
             usuario = request.user
@@ -63,6 +86,8 @@ class ContextoConsultorioMiddleware:
                         self._marcar_uso(request)
                     else:
                         request.session.pop("consultorio_id", None)
+                if request.vinculo is None and usuario.is_staff:
+                    self._suporte(request, usuario)
             return self.get_response(request)
         finally:
             timezone.deactivate()
@@ -73,9 +98,9 @@ class ContextoConsultorioMiddleware:
 
 
 class SegundoFatorObrigatorioMiddleware:
-    """Quem e profissional em algum consultorio precisa ter o 2FA configurado para usar o sistema."""
+    """Profissional (em qualquer consultorio) e equipe da plataforma precisam do 2FA configurado para usar o sistema."""
 
-    LIVRES = ("/conta/2fa/", "/sair/", "/static/", "/admin/")
+    LIVRES = ("/conta/2fa/", "/sair/", "/static/")
 
     def __init__(self, get_response):
         self.get_response = get_response
@@ -87,10 +112,10 @@ class SegundoFatorObrigatorioMiddleware:
                 logout(request)
                 return redirect("contas:entrar")
             if not usuario.segundo_fator_ativo and not request.path.startswith(self.LIVRES):
-                eh_profissional = Vinculo.objects.filter(
+                exige = usuario.is_staff or Vinculo.objects.filter(
                     usuario=usuario, perfil=Perfil.PROFISSIONAL, ativo=True
                 ).exists()
-                if eh_profissional:
+                if exige:
                     messages.warning(request, "Ative a verificação em duas etapas para continuar.")
                     return redirect("contas:configurar_2fa")
         return self.get_response(request)
@@ -99,13 +124,15 @@ class SegundoFatorObrigatorioMiddleware:
 class SomenteLeituraMiddleware:
     """Consultorio inadimplente apos a carencia: ve e exporta, nao cria nem altera."""
 
-    LIVRES = ("/sair/", "/conta/", "/exportacao/", "/admin/")
+    LIVRES = ("/sair/", "/conta/", "/exportacao/", "/admin/", "/operador/suporte/sair/")
 
     def __init__(self, get_response):
         self.get_response = get_response
 
     def __call__(self, request):
         consultorio = getattr(request, "consultorio", None)
+        if getattr(request, "suporte", None) and request.method not in METODOS_SEGUROS and not request.path.startswith(self.LIVRES):
+            return HttpResponseForbidden("O acesso de suporte é somente leitura.")
         if (
             consultorio
             and consultorio.somente_leitura
@@ -137,4 +164,18 @@ class InatividadeProntuarioMiddleware:
                 messages.warning(request, "Sua sessão expirou por inatividade. Entre novamente para abrir prontuários.")
                 return redirect("contas:entrar")
             request.session["ultima_atividade"] = agora
+        return self.get_response(request)
+
+
+class SuporteAuditoriaMiddleware:
+    """Cada requisicao feita pelo suporte dentro da conta do cliente fica na auditoria do cliente (visivel a ele)."""
+
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        if getattr(request, "suporte", None) and not request.path.startswith("/static/"):
+            from apps.auditoria import servico as auditoria
+
+            auditoria.registrar(request, "suporte_requisicao", "suporte", request.suporte.pk, metodo=request.method, caminho=request.path[:150])
         return self.get_response(request)

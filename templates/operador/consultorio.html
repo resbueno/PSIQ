@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block titulo %}{{ c.nome }} · Operação PSIQ{% endblock %}
+{% block conteudo %}
+<h1>{{ c.nome }}</h1>
+<dl class="dados">
+  <dt>Situação</dt><dd><span class="etiqueta">{{ c.get_status_display }}</span></dd>
+  <dt>Plano</dt><dd>{{ c.plano|default:"Sem plano" }}{% if c.plano %} · até {{ c.plano.limite_pacientes_ativos }} pacientes e {{ c.plano.limite_profissionais }} profissionais{% endif %}</dd>
+  <dt>Uso</dt><dd>{{ meta.pacientes }} pacientes ativos · {{ meta.profissionais }} profissionais · {{ meta.usuarios }} usuários</dd>
+</dl>
+
+<h2>Plano e situação</h2>
+<form method="post" action="{% url 'operador:alterar' c.pk %}" class="busca">{% csrf_token %}<input type="hidden" name="acao" value="plano">{{ plano_form.plano }}<button class="botao secundario" type="submit">Salvar plano</button></form>
+<form method="post" action="{% url 'operador:alterar' c.pk %}" class="busca">{% csrf_token %}<input type="hidden" name="acao" value="status">{{ status_form.status }}<button class="botao secundario" type="submit">Salvar situação</button></form>
+<p class="ajuda">A situação muda sozinha pela regra de inadimplência (carência de 15 dias, depois somente leitura). Use a alteração manual só em exceções.</p>
+
+<h2>Cobranças da plataforma</h2>
+<div class="tabela-rolagem"><table>
+  <thead><tr><th>Competência</th><th>Valor</th><th>Vencimento</th><th>Situação</th><th></th></tr></thead>
+  <tbody>
+  {% for p in pagamentos %}<tr><td>{{ p.competencia|date:"m/Y" }}</td><td>R$ {{ p.valor }}</td><td>{{ p.vencimento|date:"d/m/Y"|default:"—" }}</td>
+    <td><span class="etiqueta {% if p.status == 'pago' %}ok{% else %}pendente{% endif %}">{{ p.get_status_display }}</span></td>
+    <td>{% if p.status == 'pendente' %}<form method="post" action="{% url 'operador:pagar' c.pk p.pk %}">{% csrf_token %}<button class="botao secundario" type="submit">Marcar como pago</button></form>{% endif %}</td></tr>
+  {% empty %}<tr><td colspan="5">Nenhuma cobrança.</td></tr>{% endfor %}
+  </tbody></table></div>
+<form method="post" action="{% url 'operador:alterar' c.pk %}" class="campos">{% csrf_token %}<input type="hidden" name="acao" value="pagamento">
+  {% include "_campos.html" with form=pagamento_form %}
+  <div><button class="botao" type="submit">Registrar cobrança</button></div>
+</form>
+
+<h2>Suporte</h2>
+{% if suporte_vigente %}
+  <p>Autorizado pelo cliente até {{ suporte_vigente.fim|date:"d/m/Y H:i" }}: {{ suporte_vigente.motivo }}</p>
+  <form method="post" action="{% url 'operador:suporte_entrar' c.pk %}">{% csrf_token %}<button class="botao" type="submit">Entrar na conta (somente leitura)</button></form>
+{% else %}<p class="ajuda">Sem autorização vigente. O cliente autoriza em “Suporte do PSIQ”.</p>{% endif %}
+{% endblock %}

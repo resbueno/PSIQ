@@ -79,6 +79,7 @@ class PagamentoPlataforma(ModeloBase):
 
     consultorio = models.ForeignKey(Consultorio, on_delete=models.PROTECT, related_name="pagamentos")
     competencia = models.DateField(help_text="Primeiro dia do mês de referência.")
+    vencimento = models.DateField(null=True, blank=True, help_text="Depois dele, sem pagamento, começa a carência.")
     valor = models.DecimalField(max_digits=10, decimal_places=2)
     status = models.CharField(max_length=20, choices=Status.choices, default=Status.PENDENTE)
     pago_em = models.DateTimeField(null=True, blank=True, help_text="Marcado manualmente pelo operador.")

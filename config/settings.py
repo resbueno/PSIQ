@@ -28,6 +28,7 @@ INSTALLED_APPS = [
     "apps.financeiro",
     "apps.portal",
     "apps.calendarios",
+    "apps.operador",
 ]
 
 MIDDLEWARE = [
@@ -44,6 +45,7 @@ MIDDLEWARE = [
     "apps.core.middleware.SegundoFatorObrigatorioMiddleware",
     "apps.core.middleware.InatividadeProntuarioMiddleware",
     "apps.core.middleware.SomenteLeituraMiddleware",
+    "apps.core.middleware.SuporteAuditoriaMiddleware",
 ]
 
 ROOT_URLCONF = "config.urls"
@@ -168,3 +170,6 @@ PSIQ_MICROSOFT_CLIENT_ID = env("PSIQ_MICROSOFT_CLIENT_ID", default="")
 PSIQ_MICROSOFT_CLIENT_SECRET = env("PSIQ_MICROSOFT_CLIENT_SECRET", default="")
 PSIQ_MICROSOFT_TENANT = env("PSIQ_MICROSOFT_TENANT", default="common")
 PSIQ_CALENDARIO_JANELA_DIAS = 60
+
+# Inadimplencia: aviso, carencia de 15 dias, depois somente leitura (exportacao sempre liberada)
+PSIQ_CARENCIA_DIAS = 15

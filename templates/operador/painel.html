@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block titulo %}Operação PSIQ{% endblock %}
+{% block conteudo %}
+<h1>Consultórios</h1>
+<p>Números de conta e cobrança. Este painel nunca mostra conteúdo clínico.</p>
+<p><a class="botao" href="{% url 'operador:novo' %}">Novo consultório</a></p>
+<div class="tabela-rolagem"><table>
+  <thead><tr><th>Consultório</th><th>Plano</th><th>Situação</th><th>Pacientes ativos</th><th>Profissionais</th><th>Cobranças em aberto</th></tr></thead>
+  <tbody>
+  {% for l in linhas %}
+    <tr><td><a href="{% url 'operador:consultorio' l.c.pk %}">{{ l.c.nome }}</a></td><td>{{ l.c.plano|default:"—" }}</td>
+      <td><span class="etiqueta {% if l.c.status == 'ativo' %}ok{% elif l.c.status != 'encerrado' %}pendente{% endif %}">{{ l.c.get_status_display }}</span></td>
+      <td>{{ l.pacientes }}{% if l.c.plano %} / {{ l.c.plano.limite_pacientes_ativos }}{% endif %}{% if l.acima_do_limite %} <span class="etiqueta pendente">acima do limite</span>{% endif %}</td>
+      <td>{{ l.profissionais }}</td><td>{{ l.pendentes }}{% if l.atrasados %} <span class="etiqueta pendente">{{ l.atrasados }} vencida(s)</span>{% endif %}</td></tr>
+  {% empty %}<tr><td colspan="6">Nenhum consultório cadastrado.</td></tr>{% endfor %}
+  </tbody></table></div>
+{% endblock %}

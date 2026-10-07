@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block titulo %}Suporte do PSIQ{% endblock %}
+{% block conteudo %}
+<h1>Suporte do PSIQ</h1>
+<p>A equipe do PSIQ só entra na sua conta se você autorizar, por tempo limitado. O acesso é somente leitura, nunca abre prontuários, e tudo o que for aberto aparece na sua auditoria. Você pode encerrar a qualquer momento.</p>
+<form method="post" class="campos" novalidate>{% csrf_token %}
+  {% include "_campos.html" %}
+  <div><button class="botao" type="submit">Autorizar acesso</button></div>
+</form>
+<h2>Histórico</h2>
+<div class="tabela-rolagem"><table>
+  <thead><tr><th>Atendente</th><th>Motivo</th><th>Período</th><th></th></tr></thead>
+  <tbody>
+  {% for a in acessos %}<tr><td>{{ a.operador.nome }}</td><td>{{ a.motivo }}</td><td>{{ a.inicio|date:"d/m H:i" }} a {{ a.fim|date:"d/m H:i" }}</td>
+    <td>{% if a.vigente %}<form method="post" action="{% url 'operador:suporte_revogar' a.pk %}">{% csrf_token %}<button class="botao perigo" type="submit">Encerrar agora</button></form>{% elif a.revogado_em %}<span class="etiqueta">Encerrado</span>{% else %}<span class="etiqueta">Vencido</span>{% endif %}</td></tr>
+  {% empty %}<tr><td colspan="4">Nenhum acesso autorizado até hoje.</td></tr>{% endfor %}
+  </tbody></table></div>
+{% endblock %}

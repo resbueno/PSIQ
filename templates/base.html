@@ -41,6 +41,8 @@
         <a href="{% url 'financeiro:config_lista' 'recorrentes' %}">Aluguel de sala</a>
       {% endif %}
       <a href="{% url 'contas:dispositivos' %}">Dispositivos conectados</a>
+      {% if user.is_staff %}<a href="{% url 'operador:painel' %}">Operação PSIQ</a>{% endif %}
+      {% if perfil_ativo == 'admin' and not request.suporte %}<a href="{% url 'operador:suporte_cliente' %}">Suporte do PSIQ</a>{% endif %}
       {% if user.is_authenticated %}<a href="{% url 'contas:escolher_consultorio' %}">Trocar de consultório</a>{% endif %}
     </nav>
     <div class="fim">
@@ -57,6 +59,7 @@
     {% elif consultorio_ativo.status == 'somente_leitura' %}
       <div class="aviso-leitura">Consultório em somente leitura por pendência de pagamento. Você pode consultar e exportar os dados.</div>
     {% endif %}
+    {% if request.suporte %}<div class="aviso-leitura">Modo suporte, somente leitura, autorizado pelo cliente até {{ request.suporte.fim|date:"H:i" }}. Prontuários ficam indisponíveis. <form method="post" action="{% url 'operador:suporte_sair' %}" style="display:inline">{% csrf_token %}<button class="botao secundario" type="submit">Sair do suporte</button></form></div>{% endif %}
     {% if messages %}<ul class="mensagens">{% for m in messages %}<li class="{{ m.tags }}">{{ m }}</li>{% endfor %}</ul>{% endif %}
     {% block conteudo %}{% endblock %}
   </main>
