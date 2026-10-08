@@ -7,64 +7,78 @@
   <link rel="stylesheet" href="{% static 'css/psiq.css' %}">
   <link rel="manifest" href="{% url 'manifesto' %}">
   <meta name="sw" content="{% url 'service_worker' %}">
-  <meta name="theme-color" content="#16303a">
+  <meta name="theme-color" content="#0f2a33">
+  <meta name="color-scheme" content="light dark">
   <meta name="csrf" content="{{ csrf_token }}">
   <script src="{% static 'js/pwa.js' %}" defer></script>
 </head>
 <body>
+{% include "_icones.html" %}
+<a class="pular-conteudo" href="#conteudo">Pular para o conteúdo</a>
 {% block corpo %}
 <div class="app">
-  <aside class="lateral">
-    <div>
-      <div class="marca">MeuPSIQ</div>
-      {% if consultorio_ativo %}<div class="consultorio-nome">{{ consultorio_ativo.nome }}</div>{% endif %}
+  <aside class="lateral" id="lateral">
+    <div class="lateral-topo">
+      <div>
+        <div class="marca"><svg class="icone" aria-hidden="true"><use href="#i-logo"/></svg>MeuPSIQ</div>
+        {% if consultorio_ativo %}<div class="consultorio-nome">{{ consultorio_ativo.nome }}</div>{% endif %}
+      </div>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="menu-principal"><svg class="icone" aria-hidden="true"><use href="#i-menu"/></svg>Menu</button>
     </div>
-    <nav aria-label="Principal">
-      <a href="{% url 'painel' %}">Painel</a>
+    <nav aria-label="Principal" id="menu-principal">
+      <a href="{% url 'painel' %}" data-exato><svg class="icone" aria-hidden="true"><use href="#i-home"/></svg>Painel</a>
       {% if perfil_ativo %}
-        <a href="{% url 'agenda:semana' %}">Agenda</a>
-        <a href="{% url 'agenda:solicitacoes' %}">Solicitações</a>
-        <a href="{% url 'pacientes:lista' %}">Pacientes</a>
-        <a href="{% url 'importacao:inicio' %}">Importar pacientes</a>
-        <a href="{% url 'pacientes:grupos' %}">Casais e grupos</a>
-        <a href="{% url 'prontuario:lista' %}">Prontuários</a>
-        {% if perfil_ativo == 'profissional' %}<a href="{% url 'calendarios:lista' %}">Calendários</a>{% endif %}
-        <a href="{% url 'financeiro:lancamentos' %}">Financeiro</a>
-        <a href="{% url 'financeiro:repasses' %}">Repasses</a>
-        <a href="{% url 'relatorios:indice' %}">Relatórios</a>
-        <a href="{% url 'relatorios:exportacao' %}">Exportar dados</a>
-        <a href="{% url 'portal:lgpd_lista' %}">Pedidos de pacientes</a>
-        {% if perfil_ativo != 'profissional' %}<a href="{% url 'financeiro:convenio' %}">Convênios (fila)</a>{% endif %}
+        <div class="nav-grupo">Atendimento</div>
+        <a href="{% url 'agenda:semana' %}"><svg class="icone" aria-hidden="true"><use href="#i-calendar"/></svg>Agenda</a>
+        <a href="{% url 'agenda:solicitacoes' %}"><svg class="icone" aria-hidden="true"><use href="#i-inbox"/></svg>Solicitações</a>
+        <a href="{% url 'pacientes:lista' %}"><svg class="icone" aria-hidden="true"><use href="#i-users"/></svg>Pacientes</a>
+        <a href="{% url 'pacientes:grupos' %}"><svg class="icone" aria-hidden="true"><use href="#i-users"/></svg>Casais e grupos</a>
+        <a href="{% url 'prontuario:lista' %}"><svg class="icone" aria-hidden="true"><use href="#i-file"/></svg>Prontuários</a>
+        {% if perfil_ativo == 'profissional' %}<a href="{% url 'calendarios:lista' %}"><svg class="icone" aria-hidden="true"><use href="#i-link"/></svg>Calendários</a>{% endif %}
+        <a href="{% url 'portal:lgpd_lista' %}"><svg class="icone" aria-hidden="true"><use href="#i-shield"/></svg>Pedidos de pacientes</a>
+
+        <div class="nav-grupo">Financeiro</div>
+        <a href="{% url 'financeiro:lancamentos' %}"><svg class="icone" aria-hidden="true"><use href="#i-money"/></svg>Financeiro</a>
+        <a href="{% url 'financeiro:repasses' %}"><svg class="icone" aria-hidden="true"><use href="#i-swap"/></svg>Repasses</a>
+        {% if perfil_ativo != 'profissional' %}<a href="{% url 'financeiro:convenio' %}"><svg class="icone" aria-hidden="true"><use href="#i-clock"/></svg>Convênios (fila)</a>{% endif %}
+
+        <div class="nav-grupo">Dados</div>
+        <a href="{% url 'relatorios:indice' %}"><svg class="icone" aria-hidden="true"><use href="#i-chart"/></svg>Relatórios</a>
+        <a href="{% url 'importacao:inicio' %}"><svg class="icone" aria-hidden="true"><use href="#i-upload"/></svg>Importar pacientes</a>
+        <a href="{% url 'relatorios:exportacao' %}"><svg class="icone" aria-hidden="true"><use href="#i-download"/></svg>Exportar dados</a>
       {% endif %}
       {% if perfil_ativo == 'admin' %}
-        <a href="{% url 'contas:usuarios' %}">Usuários</a>
-        <a href="{% url 'contas:auditoria' %}">Auditoria</a>
-        <a href="{% url 'prontuario:delegar' %}">Delegar prontuários</a>
-        <a href="{% url 'financeiro:config_lista' 'convenios' %}">Convênios e valores</a>
-        <a href="{% url 'financeiro:config_lista' 'regras-repasse' %}">Regras de repasse</a>
-        <a href="{% url 'financeiro:config_lista' 'recorrentes' %}">Aluguel de sala</a>
+        <div class="nav-grupo">Administração</div>
+        <a href="{% url 'contas:usuarios' %}"><svg class="icone" aria-hidden="true"><use href="#i-user"/></svg>Usuários</a>
+        <a href="{% url 'contas:auditoria' %}"><svg class="icone" aria-hidden="true"><use href="#i-shield"/></svg>Auditoria</a>
+        <a href="{% url 'prontuario:delegar' %}"><svg class="icone" aria-hidden="true"><use href="#i-file"/></svg>Delegar prontuários</a>
+        <a href="{% url 'financeiro:config_lista' 'convenios' %}"><svg class="icone" aria-hidden="true"><use href="#i-sliders"/></svg>Convênios e valores</a>
+        <a href="{% url 'financeiro:config_lista' 'regras-repasse' %}"><svg class="icone" aria-hidden="true"><use href="#i-sliders"/></svg>Regras de repasse</a>
+        <a href="{% url 'financeiro:config_lista' 'recorrentes' %}"><svg class="icone" aria-hidden="true"><use href="#i-sliders"/></svg>Aluguel de sala</a>
       {% endif %}
-      <a href="{% url 'contas:dispositivos' %}">Dispositivos conectados</a>
-      {% if user.is_staff %}<a href="{% url 'operador:painel' %}">Operação MeuPSIQ</a>{% endif %}
-      {% if perfil_ativo == 'admin' and not request.suporte %}<a href="{% url 'operador:suporte_cliente' %}">Suporte do MeuPSIQ</a>{% endif %}
-      {% if user.is_authenticated %}<a href="{% url 'contas:escolher_consultorio' %}">Trocar de consultório</a>{% endif %}
+
+      <div class="nav-grupo">Conta</div>
+      <a href="{% url 'contas:dispositivos' %}"><svg class="icone" aria-hidden="true"><use href="#i-phone"/></svg>Dispositivos conectados</a>
+      {% if user.is_staff %}<a href="{% url 'operador:painel' %}"><svg class="icone" aria-hidden="true"><use href="#i-sliders"/></svg>Operação MeuPSIQ</a>{% endif %}
+      {% if perfil_ativo == 'admin' and not request.suporte %}<a href="{% url 'operador:suporte_cliente' %}"><svg class="icone" aria-hidden="true"><use href="#i-support"/></svg>Suporte do MeuPSIQ</a>{% endif %}
+      {% if user.is_authenticated %}<a href="{% url 'contas:escolher_consultorio' %}"><svg class="icone" aria-hidden="true"><use href="#i-swap"/></svg>Trocar de consultório</a>{% endif %}
     </nav>
     <div class="fim">
-      <div>{{ user.nome }}</div>
+      <div><strong>{{ user.nome }}</strong></div>
       {% if perfil_ativo_nome %}<div class="consultorio-nome">{{ perfil_ativo_nome }}</div>{% endif %}
       <form method="post" action="{% url 'contas:sair' %}">{% csrf_token %}
         <button class="botao secundario" type="submit">Sair</button>
       </form>
     </div>
   </aside>
-  <main class="conteudo">
+  <main class="conteudo" id="conteudo" tabindex="-1">
     {% if consultorio_ativo.status == 'carencia' %}
-      <div class="aviso-leitura">Há um pagamento pendente neste consultório. Após a carência, o acesso passa a ser somente leitura.</div>
+      <div class="aviso-leitura" role="status">Há um pagamento pendente neste consultório. Após a carência, o acesso passa a ser somente leitura.</div>
     {% elif consultorio_ativo.status == 'somente_leitura' %}
-      <div class="aviso-leitura">Consultório em somente leitura por pendência de pagamento. Você pode consultar e exportar os dados.</div>
+      <div class="aviso-leitura" role="status">Consultório em somente leitura por pendência de pagamento. Você pode consultar e exportar os dados.</div>
     {% endif %}
-    {% if request.suporte %}<div class="aviso-leitura">Modo suporte, somente leitura, autorizado pelo cliente até {{ request.suporte.fim|date:"H:i" }}. Prontuários ficam indisponíveis. <form method="post" action="{% url 'operador:suporte_sair' %}" style="display:inline">{% csrf_token %}<button class="botao secundario" type="submit">Sair do suporte</button></form></div>{% endif %}
-    {% if messages %}<ul class="mensagens">{% for m in messages %}<li class="{{ m.tags }}">{{ m }}</li>{% endfor %}</ul>{% endif %}
+    {% if request.suporte %}<div class="aviso-leitura" role="status">Modo suporte, somente leitura, autorizado pelo cliente até {{ request.suporte.fim|date:"H:i" }}. Prontuários ficam indisponíveis. <form method="post" action="{% url 'operador:suporte_sair' %}">{% csrf_token %}<button class="botao secundario pequeno" type="submit">Sair do suporte</button></form></div>{% endif %}
+    {% if messages %}<ul class="mensagens" role="status">{% for m in messages %}<li class="{{ m.tags }}">{{ m }}</li>{% endfor %}</ul>{% endif %}
     {% block conteudo %}{% endblock %}
   </main>
 </div>

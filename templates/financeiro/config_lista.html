@@ -14,7 +14,7 @@
   <tbody>
   {% for obj, valores in linhas %}<tr>{% for v in valores %}<td>{{ v }}</td>{% endfor %}
     <td><a href="{% url 'financeiro:config_editar' chave obj.pk %}">Editar</a>
-      <form method="post" action="{% url 'financeiro:config_remover' chave obj.pk %}" style="display:inline">{% csrf_token %}<button class="botao secundario" type="submit">Remover</button></form></td></tr>
+      <form method="post" action="{% url 'financeiro:config_remover' chave obj.pk %}" class="em-linha">{% csrf_token %}<button class="botao secundario" type="submit">Remover</button></form></td></tr>
   {% empty %}<tr><td colspan="{{ cabecalhos|length|add:1 }}">Nada cadastrado ainda.</td></tr>{% endfor %}
   </tbody></table></div>
 {% endblock %}

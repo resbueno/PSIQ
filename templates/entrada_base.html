@@ -2,11 +2,11 @@
 {% block corpo %}
 <div class="entrada">
   <section class="lado-marca">
-    <div class="marca">MeuPSIQ</div>
+    <div class="marca"><svg class="icone" aria-hidden="true"><use href="#i-logo"/></svg>MeuPSIQ</div>
     <p>Agenda, pacientes, financeiro e prontuário para psicologia e psiquiatria.</p>
   </section>
-  <main class="lado-form">
-    {% if messages %}<ul class="mensagens">{% for m in messages %}<li class="{{ m.tags }}">{{ m }}</li>{% endfor %}</ul>{% endif %}
+  <main class="lado-form" id="conteudo" tabindex="-1">
+    {% if messages %}<ul class="mensagens" role="status">{% for m in messages %}<li class="{{ m.tags }}">{{ m }}</li>{% endfor %}</ul>{% endif %}
     {% block formulario %}{% endblock %}
   </main>
 </div>

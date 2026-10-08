@@ -5,7 +5,7 @@
 <form method="get" class="busca">
   <label for="de">De</label><input type="date" id="de" name="de" value="{{ ini|date:'Y-m-d' }}">
   <label for="ate">até</label><input type="date" id="ate" name="ate" value="{{ fim|date:'Y-m-d' }}">
-  {% if tipo == 'pacientes-sem-consulta' %}<label for="dias">sem consulta há (dias)</label><input type="text" id="dias" name="dias" value="{{ dias }}" inputmode="numeric" style="min-width:5rem;width:5rem">{% endif %}
+  {% if tipo == 'pacientes-sem-consulta' %}<label for="dias">sem consulta há (dias)</label><input type="text" id="dias" name="dias" value="{{ dias }}" inputmode="numeric" class="campo-curto">{% endif %}
   <button class="botao" type="submit">Atualizar</button>
   <a class="botao secundario" href="?de={{ ini|date:'Y-m-d' }}&ate={{ fim|date:'Y-m-d' }}&dias={{ dias }}&formato=csv">Baixar CSV</a>
   <a class="botao secundario" href="?de={{ ini|date:'Y-m-d' }}&ate={{ fim|date:'Y-m-d' }}&dias={{ dias }}&formato=pdf">Baixar PDF</a>

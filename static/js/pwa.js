@@ -4,6 +4,36 @@
     campo.addEventListener('change', function () { campo.form.submit(); });
   });
 
+  // Marca no menu a pagina atual: o link de maior caminho que prefixa a URL (o Painel so vale na raiz exata).
+  document.querySelectorAll('.lateral nav, .portal-topo nav').forEach(function (menu) {
+    var atual = location.pathname, melhor = null, tamanho = -1;
+    menu.querySelectorAll('a[href]').forEach(function (link) {
+      var caminho = new URL(link.href, location.href).pathname;
+      var base = caminho.charAt(caminho.length - 1) === '/' ? caminho : caminho + '/';
+      var confere = link.hasAttribute('data-exato') ? atual === caminho : (atual === caminho || atual.indexOf(base) === 0);
+      if (confere && caminho.length > tamanho) { melhor = link; tamanho = caminho.length; }
+    });
+    if (melhor) { melhor.setAttribute('aria-current', 'page'); }
+  });
+
+  // Menu recolhivel no celular. Sem JavaScript o menu fica sempre aberto.
+  var lateral = document.querySelector('.lateral');
+  var alternar = lateral && lateral.querySelector('.menu-toggle');
+  if (alternar) {
+    document.documentElement.classList.add('js');
+    alternar.addEventListener('click', function () {
+      var aberto = lateral.classList.toggle('aberta');
+      alternar.setAttribute('aria-expanded', aberto ? 'true' : 'false');
+    });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && lateral.classList.contains('aberta')) {
+        lateral.classList.remove('aberta');
+        alternar.setAttribute('aria-expanded', 'false');
+        alternar.focus();
+      }
+    });
+  }
+
   if (!('serviceWorker' in navigator)) { return; }
   var meta = document.querySelector('meta[name="sw"]');
   if (!meta) { return; }

@@ -3,11 +3,11 @@
 {% block conteudo %}
 <h1>{{ paciente.nome }}</h1>
 {% if paciente.mesclado_em %}<div class="aviso-leitura">Cadastro mesclado em {{ paciente.mesclado_em|date:"d/m/Y" }}. Use o cadastro principal: <a href="{% url 'pacientes:detalhe' paciente.mesclado_com_id %}">{{ paciente.mesclado_com.nome }}</a>.</div>{% else %}
-<p>
+<div class="acoes-pagina">
   <a class="botao" href="{% url 'agenda:nova_consulta' %}?paciente={{ paciente.pk }}">Agendar consulta</a>
   <a class="botao secundario" href="{% url 'pacientes:editar' paciente.pk %}">Editar</a>
   <a class="botao secundario" href="{% url 'pacientes:mesclar' paciente.pk %}">Mesclar cadastros</a>
-</p>{% endif %}
+</div>{% endif %}
 <dl class="dados">
   <dt>CPF</dt><dd>{{ paciente.cpf|default:"—" }}</dd>
   <dt>Nascimento</dt><dd>{% if paciente.nascimento %}{{ paciente.nascimento|date:"d/m/Y" }} ({{ paciente.idade }} anos){% else %}—{% endif %}</dd>
@@ -18,10 +18,12 @@
 </dl>
 
 <h2>Responsáveis legais</h2>
+<ul class="lista-simples">
 {% for r in responsaveis %}
-  <p>{{ r.nome }} {% if r.recebe_avisos %}<span class="etiqueta ok">Recebe avisos</span>{% endif %}{% if r.pode_pagar %} <span class="etiqueta">Pagador</span>{% endif %}
-  <form method="post" action="{% url 'pacientes:responsavel_remover' paciente.pk r.pk %}" style="display:inline">{% csrf_token %}<button class="botao secundario" type="submit">Remover</button></form></p>
-{% empty %}<p class="ajuda">Nenhum responsável cadastrado.</p>{% endfor %}
+  <li><span>{{ r.nome }} {% if r.recebe_avisos %}<span class="etiqueta ok">Recebe avisos</span>{% endif %}{% if r.pode_pagar %} <span class="etiqueta">Pagador</span>{% endif %}</span>
+  <form method="post" action="{% url 'pacientes:responsavel_remover' paciente.pk r.pk %}" class="em-linha">{% csrf_token %}<button class="botao secundario pequeno" type="submit">Remover</button></form></li>
+{% empty %}<li class="ajuda">Nenhum responsável cadastrado.</li>{% endfor %}
+</ul>
 <p><a href="{% url 'pacientes:responsavel_novo' paciente.pk %}">Adicionar responsável</a></p>
 
 <h2>Pagador do recibo</h2>
@@ -35,7 +37,7 @@
 {% for d in documentos_comparecimento %}<p><a href="{% url 'prontuario:documento_baixar' d.pk %}">{{ d.titulo }}</a> <span class="ajuda">{{ d.criado_em|date:"d/m/Y" }}</span></p>{% endfor %}
 {% endif %}
 <h2>Próximas consultas</h2>
-{% for c in proximas %}<p><a href="{% url 'agenda:consulta' c.pk %}">{{ c.inicio|date:"d/m/Y H:i" }}</a> · {{ c.profissional.usuario.nome }} · {{ c.get_status_display }}</p>{% empty %}<p class="ajuda">Nenhuma consulta futura.</p>{% endfor %}
+<ul class="lista-simples">{% for c in proximas %}<li><a href="{% url 'agenda:consulta' c.pk %}">{{ c.inicio|date:"d/m/Y H:i" }}</a> · {{ c.profissional.usuario.nome }} · {{ c.get_status_display }}</li>{% empty %}<li class="ajuda">Nenhuma consulta futura.</li>{% endfor %}</ul>
 <h2>Consultas anteriores</h2>
-{% for c in anteriores %}<p><a href="{% url 'agenda:consulta' c.pk %}">{{ c.inicio|date:"d/m/Y H:i" }}</a> · {{ c.get_status_display }}</p>{% empty %}<p class="ajuda">Sem histórico.</p>{% endfor %}
+<ul class="lista-simples">{% for c in anteriores %}<li><a href="{% url 'agenda:consulta' c.pk %}">{{ c.inicio|date:"d/m/Y H:i" }}</a> · {{ c.get_status_display }}</li>{% empty %}<li class="ajuda">Sem histórico.</li>{% endfor %}</ul>
 {% endblock %}

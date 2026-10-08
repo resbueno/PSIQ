@@ -3,19 +3,49 @@
 {% block conteudo %}
 <h1>Olá, {{ user.nome }}</h1>
 
-<h2>Hoje</h2>
-{% for c in consultas_hoje %}
-  <p><a href="{% url 'agenda:consulta' c.pk %}"><strong>{{ c.inicio|date:"H:i" }}</strong></a> {% if c.paciente %}{{ c.paciente.nome }}{% else %}{{ c.grupo.nome }}{% endif %}
-  {% if perfil_ativo != 'profissional' %}<span class="ajuda">com {{ c.profissional.usuario.nome }}</span>{% endif %}
-  <span class="etiqueta">{{ c.get_status_display }}</span></p>
-{% empty %}<p class="ajuda">Nenhuma consulta agendada para hoje. <a href="{% url 'agenda:nova_consulta' %}">Agendar uma consulta</a></p>{% endfor %}
+<div class="grade-cartoes">
+  <a class="metrica" href="{% url 'agenda:semana' %}">
+    <svg class="icone" aria-hidden="true"><use href="#i-calendar"/></svg>
+    <span><span class="valor">{{ consultas_hoje|length }}</span><span class="rotulo">consulta{{ consultas_hoje|length|pluralize }} hoje</span></span>
+  </a>
+  <a class="metrica{% if solicitacoes_pendentes %} atencao{% endif %}" href="{% url 'agenda:solicitacoes' %}">
+    <svg class="icone" aria-hidden="true"><use href="#i-inbox"/></svg>
+    <span><span class="valor">{{ solicitacoes_pendentes|default:0 }}</span><span class="rotulo">solicitaç{{ solicitacoes_pendentes|default:0|pluralize:"ão,ões" }} aguardando decisão</span></span>
+  </a>
+  {% if sem_consulta %}
+  <a class="metrica atencao" href="{% url 'pacientes:lista' %}?sem_consulta_ha={{ dias_sem_consulta }}">
+    <svg class="icone" aria-hidden="true"><use href="#i-clock"/></svg>
+    <span><span class="valor">{{ sem_consulta }}</span><span class="rotulo">paciente{{ sem_consulta|pluralize }} sem consulta há mais de {{ dias_sem_consulta }} dias</span></span>
+  </a>
+  {% endif %}
+  {% if perfil_ativo == 'admin' %}
+  <a class="metrica" href="{% url 'contas:usuarios' %}">
+    <svg class="icone" aria-hidden="true"><use href="#i-user"/></svg>
+    <span><span class="valor">{{ usuarios_ativos }}</span><span class="rotulo">usuário{{ usuarios_ativos|pluralize }} com acesso ativo</span></span>
+  </a>
+  {% endif %}
+</div>
 
-{% if solicitacoes_pendentes %}<p><a href="{% url 'agenda:solicitacoes' %}">{{ solicitacoes_pendentes }} solicitaç{{ solicitacoes_pendentes|pluralize:"ão,ões" }} de horário aguardando decisão</a></p>{% endif %}
-{% if sem_consulta %}<p><a href="{% url 'pacientes:lista' %}?sem_consulta_ha={{ dias_sem_consulta }}">{{ sem_consulta }} paciente{{ sem_consulta|pluralize }} sem consulta há mais de {{ dias_sem_consulta }} dias</a></p>{% endif %}
+<h2>Hoje</h2>
+{% if consultas_hoje %}
+<ul class="agora">
+{% for c in consultas_hoje %}
+  <li>
+    <span class="hora">{{ c.inicio|date:"H:i" }}</span>
+    <span class="quem"><a href="{% url 'agenda:consulta' c.pk %}">{% if c.paciente %}{{ c.paciente.nome }}{% else %}{{ c.grupo.nome }}{% endif %}</a>
+      {% if perfil_ativo != 'profissional' %}<span class="ajuda">com {{ c.profissional.usuario.nome }}</span>{% endif %}</span>
+    <span class="etiqueta {% if c.status == 'confirmada' or c.status == 'realizada' %}ok{% elif c.status == 'faltou' %}pendente{% endif %}">{{ c.get_status_display }}</span>
+  </li>
+{% endfor %}
+</ul>
+{% else %}
+<div class="vazio">
+  <p>Nenhuma consulta agendada para hoje.</p>
+  <a class="botao" href="{% url 'agenda:nova_consulta' %}">Agendar uma consulta</a>
+</div>
+{% endif %}
 
 {% if perfil_ativo == 'admin' %}
-  <h2>Resumo do consultório</h2>
-  <p>{{ usuarios_ativos }} usuário{{ usuarios_ativos|pluralize }} com acesso ativo.</p>
   <h2>Atividade recente</h2>
   <div class="tabela-rolagem">
   <table>

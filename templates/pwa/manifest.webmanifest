@@ -6,8 +6,8 @@
   "start_url": "{% url 'painel' %}",
   "scope": "{% url 'painel' %}",
   "display": "standalone",
-  "background_color": "#f3f6f6",
-  "theme_color": "#16303a",
+  "background_color": "#f2f6f7",
+  "theme_color": "#0f2a33",
   "icons": [
     {"src": "{% static 'pwa/icone.svg' %}", "sizes": "any", "type": "image/svg+xml", "purpose": "any"}
   ]
