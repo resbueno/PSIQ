@@ -11,6 +11,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.sessions.backends.db import SessionStore
 from django.db import transaction
 from django.db.models import Q
+from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.views.decorators.http import require_POST
@@ -154,6 +155,33 @@ def _concluir_login(request, usuario, segundo_fator, consultorio_alvo=None):
     if not vinculos and usuario.is_staff:
         return redirect("operador:painel")
     return redirect("contas:escolher_consultorio")
+
+
+@login_required
+@require_POST
+def ver_como(request, usuario_pk):
+    """Demonstracao: o admin do consultorio navega como outro perfil do mesmo consultorio (e volta). So em slugs de demo."""
+    consultorio = getattr(request, "consultorio", None)
+    if consultorio is None or consultorio.slug not in settings.MEUPSIQ_CONSULTORIOS_SEM_2FA:
+        raise Http404
+    original_id = request.session.get("ver_como_original") or str(request.user.pk)
+    original = Vinculo.objects.filter(
+        usuario_id=original_id, consultorio=consultorio, perfil=Perfil.ADMIN, ativo=True
+    ).select_related("usuario").first()
+    alvo = Vinculo.objects.filter(
+        usuario_id=usuario_pk, consultorio=consultorio, ativo=True, usuario__is_staff=False
+    ).select_related("usuario").first()
+    if original is None or alvo is None:
+        raise Http404
+    auditoria.registrar(request, "ver_como", "usuario", alvo.usuario_id, original=str(original.usuario_id), alvo=str(alvo.usuario_id))
+    voltando = alvo.usuario_id == original.usuario_id
+    login(request, alvo.usuario, backend="django.contrib.auth.backends.ModelBackend")
+    request.session["segundo_fator_ok"] = True
+    request.session["consultorio_id"] = str(consultorio.pk)
+    if not voltando:
+        request.session["ver_como_original"] = str(original.usuario_id)
+    messages.success(request, f"Você está vendo o sistema como {alvo.usuario.nome} ({alvo.get_perfil_display()}).")
+    return redirect("painel")
 
 
 @require_POST
