@@ -14,10 +14,23 @@
 {% endif %}
 
 <h2>Registros</h2>
+{% if completo %}
+<p><a class="botao secundario" href="{% url 'prontuario:detalhe' prontuario.pk %}">Voltar à lista resumida</a></p>
+{% for r in registros %}
+<article class="cartao">
+  <h3><a href="{% url 'prontuario:registro' prontuario.pk r.pk %}">{{ r.get_tipo_display }} de {{ r.criado_em|date:"d/m/Y H:i" }}</a></h3>
+  <p class="ajuda">{% if r.consulta %}Consulta de {{ r.consulta.inicio|date:"d/m/Y" }} · {% endif %}versão {{ r.versao_numero }} de {{ r.versoes.all|length }}</p>
+  <div class="texto-clinico">{{ r.conteudo|linebreaks }}</div>
+  {% if r.cid %}<p><strong>CID:</strong> {{ r.cid }}</p>{% endif %}
+</article>
+{% empty %}<p>Nenhum registro ainda.</p>{% endfor %}
+{% else %}
+{% if registros %}<p><a class="botao secundario" href="{% url 'prontuario:detalhe' prontuario.pk %}?completo=1">Ver todos os registros em uma tela</a></p>{% endif %}
 <ul class="lista-simples">
 {% for r in registros %}<li><a href="{% url 'prontuario:registro' prontuario.pk r.pk %}">{{ r.get_tipo_display }} de {{ r.criado_em|date:"d/m/Y H:i" }}</a><span class="ajuda">{{ r.versoes.all|length }} versão(ões)</span></li>
 {% empty %}<li>Nenhum registro ainda.</li>{% endfor %}
 </ul>
+{% endif %}
 
 <h2>Anexos</h2>
 <ul class="lista-simples">

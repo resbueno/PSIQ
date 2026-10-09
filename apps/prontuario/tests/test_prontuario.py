@@ -151,6 +151,15 @@ def test_consolidado_e_404_sem_acesso_a_nenhum_prontuario(client, cena):
     assert client.get(reverse("prontuario:consolidado", args=[cena.prontuario.paciente_id])).status_code == 404
 
 
+def test_detalhe_completo_mostra_todos_os_registros_em_uma_tela(client, cena):
+    login(client, cena.dra, cena)
+    resumo = client.get(reverse("prontuario:detalhe", args=[cena.prontuario.pk]))
+    assert "ansiedade intensa".encode() not in resumo.content
+    completo = client.get(reverse("prontuario:detalhe", args=[cena.prontuario.pk]) + "?completo=1")
+    assert completo.status_code == 200 and "ansiedade intensa".encode() in completo.content
+    assert Auditoria.objects.filter(acao="prontuario_completo_lido").exists()
+
+
 def test_liberacao_permite_leitura_e_nao_escrita_e_e_auditada(client, cena):
     servico.conceder_liberacao(cena.req(cena.dra), cena.prontuario, cena.assistente)
     login(client, cena.assistente, cena)

@@ -90,9 +90,17 @@ def abrir(request, paciente_pk):
 def detalhe(request, pk):
     prontuario, papel = _prontuario(request, pk)
     auditoria.registrar(request, "prontuario_aberto", "prontuario", prontuario.pk, papel=papel)
+    registros = list(prontuario.registros.select_related("consulta").prefetch_related("versoes"))
+    completo = request.GET.get("completo") == "1"
+    if completo:  # todos os registros, com o conteudo, em uma tela so (uma leitura auditada)
+        for reg in registros:
+            versao = reg.versao_atual()
+            reg.conteudo, reg.cid = servico.ler_versao(request, versao, auditar=False)
+            reg.versao_numero = versao.numero
+        auditoria.registrar(request, "prontuario_completo_lido", "prontuario", prontuario.pk, papel=papel, registros=len(registros))
     return render(request, "prontuario/detalhe.html", {
         "prontuario": prontuario, "papel": papel, "eh_dono": papel == acesso.DONO,
-        "registros": prontuario.registros.prefetch_related("versoes"),
+        "registros": registros, "completo": completo,
         "anexos": prontuario.anexos.all(), "documentos": prontuario.documentos.all(),
         "liberacoes": prontuario.liberacoes.filter(revogado_em__isnull=True).select_related("usuario"),
         "prazo": prontuario.prazo_guarda_ate,
