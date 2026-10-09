@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block titulo %}Prontuário consolidado · MeuPSIQ{% endblock %}
+{% block conteudo %}
+<h1>Prontuário consolidado de {{ paciente.nome }}</h1>
+<p class="ajuda">Reúne, em ordem cronológica, os registros de todos os prontuários deste paciente que você pode ler. Somente leitura.</p>
+<h2>Prontuários incluídos</h2>
+<ul class="lista-simples">
+{% for p, papel in acessiveis %}<li><a href="{% url 'prontuario:detalhe' p.pk %}">{{ p.profissional.usuario.nome }}</a><span class="ajuda">{% if papel == "dono" %}seu prontuário{% else %}acesso somente leitura{% endif %} · {{ p.registros.count }} registro(s)</span></li>{% endfor %}
+</ul>
+
+<h2>Linha do tempo</h2>
+{% for item in linha %}
+<article class="cartao">
+  <h3><a href="{% url 'prontuario:registro' item.prontuario.pk item.registro.pk %}">{{ item.registro.get_tipo_display }} de {{ item.registro.criado_em|date:"d/m/Y H:i" }}</a></h3>
+  <p class="ajuda">{{ item.prontuario.profissional.usuario.nome }}{% if item.registro.consulta %} · consulta de {{ item.registro.consulta.inicio|date:"d/m/Y" }}{% endif %} · versão {{ item.versao.numero }} de {{ item.versoes }}</p>
+  <div class="texto-clinico">{{ item.conteudo|linebreaks }}</div>
+  {% if item.cid %}<p><strong>CID:</strong> {{ item.cid }}</p>{% endif %}
+</article>
+{% empty %}<p>Nenhum registro ainda.</p>{% endfor %}
+
+<h2>Anexos</h2>
+<ul class="lista-simples">
+{% for p, itens in anexos %}{% for a in itens %}<li><a href="{% url 'prontuario:anexo_baixar' p.pk a.pk %}">{{ a.nome }}</a><span class="ajuda">{{ p.profissional.usuario.nome }} · {{ a.tamanho|filesizeformat }}</span></li>{% endfor %}{% endfor %}
+</ul>
+
+<h2>Documentos emitidos</h2>
+<ul class="lista-simples">
+{% for p, itens in documentos %}{% for d in itens %}<li><a href="{% url 'prontuario:documento_baixar' d.pk %}">{{ d.titulo }}</a><span class="ajuda">{{ p.profissional.usuario.nome }} · {{ d.criado_em|date:"d/m/Y" }}</span></li>{% endfor %}{% endfor %}
+</ul>
+<p><a href="{% url 'pacientes:detalhe' paciente.pk %}">Voltar ao paciente</a></p>
+{% endblock %}

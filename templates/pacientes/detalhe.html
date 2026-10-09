@@ -32,6 +32,7 @@
 {% if eh_profissional and not paciente.mesclado_em %}
 <form method="post" action="{% url 'prontuario:abrir' paciente.pk %}">{% csrf_token %}<button class="botao secundario" type="submit">Abrir prontuário</button></form>
 {% endif %}
+{% if tem_consolidado %}<p><a class="botao secundario" href="{% url 'prontuario:consolidado' paciente.pk %}">Ver prontuário consolidado</a></p>{% endif %}
 {% if documentos_comparecimento %}
 <h2>Declarações emitidas</h2>
 {% for d in documentos_comparecimento %}<p><a href="{% url 'prontuario:documento_baixar' d.pk %}">{{ d.titulo }}</a> <span class="ajuda">{{ d.criado_em|date:"d/m/Y" }}</span></p>{% endfor %}

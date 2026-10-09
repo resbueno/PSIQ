@@ -67,6 +67,19 @@ def exigir_dono(request, prontuario):
     return DONO
 
 
+def prontuarios_do_paciente(request, paciente):
+    """Prontuarios individuais do paciente que este usuario pode ler (de qualquer profissional), como [(prontuario, papel)]."""
+    base = Prontuario.objects.filter(
+        consultorio=request.consultorio, paciente=paciente, excluido_em__isnull=True
+    ).select_related("paciente", "profissional__usuario")
+    encontrados = []
+    for p in base.order_by("criado_em"):
+        papel_ = papel(request, p)
+        if papel_ is not None:
+            encontrados.append((p, papel_))
+    return encontrados
+
+
 def prontuarios_acessiveis(request):
     """Os do proprio profissional mais os que foram liberados a este usuario (consentimento checado na abertura)."""
     base = Prontuario.objects.filter(consultorio=request.consultorio, excluido_em__isnull=True).select_related(

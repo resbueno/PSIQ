@@ -7,6 +7,7 @@ app_name = "prontuario"
 urlpatterns = [
     path("prontuarios/", views.lista, name="lista"),
     path("prontuarios/paciente/<uuid:paciente_pk>/abrir/", views.abrir, name="abrir"),
+    path("prontuarios/paciente/<uuid:paciente_pk>/consolidado/", views.consolidado, name="consolidado"),
     path("prontuarios/delegar/", views.delegar, name="delegar"),
     path("prontuarios/modelos/", views.modelos, name="modelos"),
     path("prontuarios/modelos/<uuid:modelo_pk>/", views.modelo_editar, name="modelo_editar"),

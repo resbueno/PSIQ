@@ -139,6 +139,18 @@ def test_admin_le_prontuario_em_consultorio_de_demonstracao_mas_nao_escreve(clie
     assert client.get(reverse("prontuario:registro_novo", args=[cena.prontuario.pk])).status_code == 404
 
 
+def test_consolidado_reune_registros_dos_prontuarios_que_o_usuario_le(client, cena):
+    login(client, cena.dra, cena)
+    pagina = client.get(reverse("prontuario:consolidado", args=[cena.prontuario.paciente_id]))
+    assert pagina.status_code == 200 and "ansiedade intensa".encode() in pagina.content
+    assert Auditoria.objects.filter(acao="prontuario_consolidado_lido").exists()
+
+
+def test_consolidado_e_404_sem_acesso_a_nenhum_prontuario(client, cena):
+    login(client, cena.assistente, cena)
+    assert client.get(reverse("prontuario:consolidado", args=[cena.prontuario.paciente_id])).status_code == 404
+
+
 def test_liberacao_permite_leitura_e_nao_escrita_e_e_auditada(client, cena):
     servico.conceder_liberacao(cena.req(cena.dra), cena.prontuario, cena.assistente)
     login(client, cena.assistente, cena)

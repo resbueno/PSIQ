@@ -99,6 +99,32 @@ def detalhe(request, pk):
     })
 
 
+@area_de_prontuario
+def consolidado(request, paciente_pk):
+    """Linha do tempo unica com os registros de todos os prontuarios do paciente que o usuario pode ler."""
+    paciente = get_object_or_404(pacientes_visiveis(request), pk=paciente_pk)
+    acessiveis = acesso.prontuarios_do_paciente(request, paciente)
+    if not acessiveis:
+        raise Http404
+    linha = []
+    for prontuario, papel in acessiveis:
+        registros = prontuario.registros.select_related("consulta").prefetch_related("versoes")
+        for reg in registros:
+            versao = reg.versao_atual()
+            conteudo, cid = servico.ler_versao(request, versao, auditar=False)
+            linha.append({
+                "prontuario": prontuario, "registro": reg, "versao": versao, "conteudo": conteudo, "cid": cid,
+                "versoes": len(reg.versoes.all()),
+            })
+        auditoria.registrar(request, "prontuario_consolidado_lido", "prontuario", prontuario.pk, papel=papel, registros=len(registros))
+    linha.sort(key=lambda item: item["registro"].criado_em, reverse=True)
+    return render(request, "prontuario/consolidado.html", {
+        "paciente": paciente, "acessiveis": acessiveis, "linha": linha,
+        "anexos": [(p, p.anexos.all()) for p, _ in acessiveis],
+        "documentos": [(p, p.documentos.all()) for p, _ in acessiveis],
+    })
+
+
 # --------------------------------------------------------------------------- registros
 
 

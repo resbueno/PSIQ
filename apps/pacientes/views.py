@@ -10,6 +10,7 @@ from django.views.decorators.http import require_POST
 from apps.agenda.models import Consulta
 from apps.auditoria import servico as auditoria
 from apps.core.permissoes import PERFIS_INTERNOS, perfil_requerido
+from apps.prontuario import acesso as prontuario_acesso
 from apps.core.validadores import somente_digitos
 
 from . import servico
@@ -80,6 +81,7 @@ def detalhe(request, pk):
             "responsaveis": paciente.responsaveis.all(),
             "pagador": getattr(paciente, "pagador", None),
             "eh_profissional": servico.profissional_da_requisicao(request) is not None,
+            "tem_consolidado": bool(prontuario_acesso.prontuarios_do_paciente(request, paciente)) if not paciente.mesclado_em else False,
             "documentos_comparecimento": paciente.documentos.filter(chave__isnull=True)[:10],
             "proximas": consultas.filter(inicio__gte=agora, status__in=Consulta.ATIVAS)[:10],
             "anteriores": consultas.filter(inicio__lt=agora).order_by("-inicio")[:10],
