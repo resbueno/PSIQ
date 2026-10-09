@@ -47,3 +47,11 @@ def segundo_fator_satisfeito(request):
         return True
     consultorio = getattr(request, "consultorio", None)
     return bool(consultorio and consultorio.slug in settings.MEUPSIQ_CONSULTORIOS_SEM_2FA)
+
+
+def consultorio_de_demonstracao(request):
+    """Consultorio listado em MEUPSIQ_CONSULTORIOS_SEM_2FA (so demonstracao/homologacao): o admin le prontuarios."""
+    from django.conf import settings
+
+    consultorio = getattr(request, "consultorio", None)
+    return bool(consultorio and consultorio.slug in settings.MEUPSIQ_CONSULTORIOS_SEM_2FA)

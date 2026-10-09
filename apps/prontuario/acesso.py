@@ -3,6 +3,7 @@
 from django.http import Http404
 
 from apps.contas.models import Perfil
+from apps.core.permissoes import consultorio_de_demonstracao
 from apps.pacientes.models import ParticipanteGrupo
 from apps.pacientes.servico import profissional_da_requisicao
 
@@ -40,6 +41,8 @@ def papel(request, prontuario):
     profissional = profissional_da_requisicao(request)
     if profissional is not None and prontuario.profissional_id == profissional.pk:
         return DONO
+    if consultorio_de_demonstracao(request) and getattr(request.vinculo, "perfil", None) == Perfil.ADMIN:
+        return LIBERADO  # demonstracao: o administrador le (nunca escreve) todos os prontuarios
     liberado = LiberacaoLeitura.objects.filter(
         prontuario=prontuario, usuario=request.user, revogado_em__isnull=True
     ).exists()
@@ -71,6 +74,8 @@ def prontuarios_acessiveis(request):
     )
     profissional = profissional_da_requisicao(request)
     proprios = base.filter(profissional=profissional) if profissional else base.none()
+    if consultorio_de_demonstracao(request) and getattr(request.vinculo, "perfil", None) == Perfil.ADMIN:
+        return list(proprios), [p for p in base if p not in proprios]
     liberados_ids = LiberacaoLeitura.objects.filter(usuario=request.user, revogado_em__isnull=True).values("prontuario_id")
     liberados = [p for p in base.filter(pk__in=liberados_ids) if papel(request, p) == LIBERADO]
     return list(proprios), liberados

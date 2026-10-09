@@ -129,6 +129,16 @@ def test_admin_nao_acessa_sem_liberacao(client, cena):
     assert client.get(reverse("prontuario:detalhe", args=[cena.prontuario.pk])).status_code == 404
 
 
+def test_admin_le_prontuario_em_consultorio_de_demonstracao_mas_nao_escreve(client, cena, settings):
+    settings.MEUPSIQ_CONSULTORIOS_SEM_2FA = [cena.consultorio.slug]
+    login(client, cena.admin, cena)
+    pagina = client.get(reverse("prontuario:detalhe", args=[cena.prontuario.pk]))
+    assert pagina.status_code == 200
+    leitura = client.get(reverse("prontuario:registro", args=[cena.prontuario.pk, cena.registro.pk]))
+    assert leitura.status_code == 200 and "ansiedade intensa".encode() in leitura.content
+    assert client.get(reverse("prontuario:registro_novo", args=[cena.prontuario.pk])).status_code == 404
+
+
 def test_liberacao_permite_leitura_e_nao_escrita_e_e_auditada(client, cena):
     servico.conceder_liberacao(cena.req(cena.dra), cena.prontuario, cena.assistente)
     login(client, cena.assistente, cena)

@@ -195,7 +195,7 @@ MEUPSIQ_CALENDARIO_JANELA_DIAS = 60
 # Inadimplencia: aviso, carencia de 15 dias, depois somente leitura (exportacao sempre liberada)
 MEUPSIQ_CARENCIA_DIAS = 15
 
-# Slugs de consultorios (so demonstracao/homologacao!) em que prontuarios abrem sem 2FA. Vazio em producao.
+# Slugs de consultorios (so demonstracao/homologacao!) em que prontuarios abrem sem 2FA e o admin os le. Vazio em producao.
 MEUPSIQ_CONSULTORIOS_SEM_2FA = env.list("MEUPSIQ_CONSULTORIOS_SEM_2FA", default=[])
 
 # Importacao de pacientes por planilha
