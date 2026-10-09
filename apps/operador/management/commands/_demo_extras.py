@@ -320,4 +320,66 @@ def popular_extras(consultorio, dominio, *, admin, assistente, psicologa, psiqui
         for k in range(4):
             futura(prof_psi, p["renan"] if k % 2 else p["helena"], dias=14 + k * 7, hora=10 + k)
 
+    # ------------------------------------------------------------------ prontuarios para todos os atendidos
+    @bloco("prontuarios: anamnese e uma evolução por consulta realizada, para todos os pacientes atendidos")
+    def _prontuarios():
+        from apps.prontuario.models import Prontuario, RegistroClinico
+
+        evolucoes = [
+            "Paciente relata melhora do sono e menos episódios de irritabilidade na última semana.",
+            "Trabalhamos identificação de pensamentos automáticos; tarefa de casa: registro diário.",
+            "Sessão focada em limites no trabalho. Boa participação, demonstra insight.",
+            "Relata situação familiar estressante; acolhimento e estratégias de enfrentamento.",
+            "Paciente mais comunicativa, relata retomada de atividades de lazer.",
+            "Revisão das metas terapêuticas; combinado manter frequência semanal.",
+            "Sessão com pouca fala; explorado o cansaço recente. Sem risco identificado.",
+        ]
+        anamneses = [
+            ("Queixa principal de ansiedade e dificuldade de concentração. Sem uso de substâncias.", "F41.1"),
+            ("Humor rebaixado há meses, perda de interesse e alterações de sono.", "F32.1"),
+            ("Estresse ocupacional, irritabilidade e cansaço. Rede de apoio presente.", "F43.2"),
+            ("Dificuldades de relacionamento e baixa autoestima. Busca psicoterapia pela primeira vez.", "F60.8"),
+        ]
+        criados = 0
+        pacientes_atendidos = Paciente.objects.filter(
+            consultorio=consultorio, mesclado_em__isnull=True, consultas__status=Consulta.Status.REALIZADA
+        ).distinct()
+        for i, pac in enumerate(pacientes_atendidos):
+            if pac.nome.startswith("Clara Nunes"):  # prontuario excluido a pedido do titular
+                continue
+            consultas = list(Consulta.objects.filter(paciente=pac, status=Consulta.Status.REALIZADA).order_by("inicio"))
+            for prof, r in ((prof_psi, r_psi), (prof_med, r_med)):
+                minhas = [c for c in consultas if c.profissional_id == prof.pk]
+                if not minhas:
+                    continue
+                pront = Prontuario.objects.filter(paciente=pac, profissional=prof, excluido_em__isnull=True).first()
+                if pront is None:
+                    pront = prontuario.abrir_prontuario(r, prof, paciente=pac)
+                if not pront.registros.filter(tipo=RegistroClinico.Tipo.ANAMNESE).exists():
+                    texto, cid = anamneses[i % len(anamneses)]
+                    prontuario.criar_registro(r, pront, tipo="anamnese", conteudo=f"[DEMO] Anamnese fictícia. {texto} Dados inventados.", cid=cid)
+                    criados += 1
+                for j, c in enumerate(minhas):
+                    if RegistroClinico.objects.filter(consulta=c).exists():
+                        continue
+                    reg = prontuario.criar_registro(
+                        r, pront, tipo="evolucao", consulta=c,
+                        conteudo=f"[DEMO] Sessão {j + 1} fictícia. {evolucoes[(i + j) % len(evolucoes)]}",
+                    )
+                    criados += 1
+                    if (i + j) % 5 == 0:
+                        prontuario.nova_versao(r, reg, conteudo=f"[DEMO] Sessão {j + 1} fictícia (complementada). {evolucoes[(i + j) % len(evolucoes)]} Retorno em uma semana.")
+                if prof is prof_med and not pront.registros.filter(tipo=RegistroClinico.Tipo.PRESCRICAO).exists():
+                    prontuario.criar_registro(r, pront, tipo="prescricao_registro", conteudo="[DEMO] Registro fictício de prescrição: conduta mantida, reavaliar em 30 dias.")
+                    criados += 1
+        # conjuntos (casal/familia): uma evolucao por consulta de grupo realizada
+        for c in Consulta.objects.filter(consultorio=consultorio, grupo__isnull=False, status=Consulta.Status.REALIZADA).select_related("grupo", "profissional"):
+            if RegistroClinico.objects.filter(consulta=c).exists():
+                continue
+            r = r_psi if c.profissional_id == prof_psi.pk else r_med
+            pront = prontuario.abrir_prontuario(r, c.profissional, grupo=c.grupo)
+            prontuario.criar_registro(r, pront, tipo="evolucao", consulta=c, conteudo="[DEMO] Sessão conjunta fictícia. Exercício de comunicação não violenta.")
+            criados += 1
+        aviso(f"    {criados} registro(s) clínicos criados")
+
     return falhas
