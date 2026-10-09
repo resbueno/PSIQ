@@ -2,7 +2,9 @@
 
 Papeis criados: administrador, psicologa, psiquiatra, assistente, operador da plataforma e pacientes do portal
 (adulto, crianca com responsavel). Tudo com e-mails @<dominio> inexistentes e senhas aleatorias.
-Idempotente: se o consultorio demo ja existir, nao faz nada."""
+Idempotente: se o consultorio demo ja existir, nao faz nada.
+Com --consultorio <slug>, popula um consultorio JA existente (ex.: clinica-homologacao), reaproveitando seu administrador;
+nesse caso nao faz nada se ele ja tiver pacientes."""
 
 import secrets
 from datetime import date, time, timedelta
@@ -12,6 +14,7 @@ from zoneinfo import ZoneInfo
 import pyotp
 from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
+from django.db import transaction
 from django.test import RequestFactory
 from django.test.utils import override_settings
 from django.utils import timezone
@@ -27,6 +30,8 @@ from apps.pacientes.models import GrupoAtendimento, Paciente, ParticipanteGrupo,
 from apps.plataforma.models import Consultorio, PagamentoPlataforma, Plano
 from apps.prontuario import servico as prontuario
 
+from . import _demo_extras
+
 SP = ZoneInfo("America/Sao_Paulo")
 NOME_DEMO = "Clínica Demo MeuPSIQ"
 D = Decimal
@@ -41,22 +46,59 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument("--dominio", default="demo.meupsiq.local", help="Domínio fictício dos e-mails")
+        parser.add_argument("--consultorio", default="", help="Slug de um consultório existente a popular (em vez de criar o demo)")
+        parser.add_argument("--complementar", action="store_true", help="Com --consultorio: acrescenta dados de todos os módulos a um consultório já populado")
+        parser.add_argument("--blocos", default="", help="Com --complementar: reexecuta só estes blocos (ex.: agenda,portal)")
         parser.add_argument("--forcar", action="store_true", help="Permite rodar com DEBUG desligado (homologação)")
 
     def handle(self, *args, **opcoes):
         if not settings.DEBUG and not opcoes["forcar"]:
             raise CommandError("Use --forcar para rodar fora do modo DEBUG. Isto é só para homologação, nunca produção.")
-        if Consultorio.objects.filter(nome=NOME_DEMO).exists():
+        existente = None
+        if opcoes["consultorio"]:
+            try:
+                existente = Consultorio.objects.get(slug=opcoes["consultorio"])
+            except Consultorio.DoesNotExist:
+                raise CommandError(f"Consultório '{opcoes['consultorio']}' não encontrado.")
+            if opcoes["complementar"]:
+                return self._complementar(existente, opcoes["dominio"], [b for b in opcoes["blocos"].split(",") if b])
+            with contexto(consultorio_id=existente.pk):
+                ja_populado = Paciente.objects.exists()
+            if ja_populado:
+                self.stdout.write("O consultório já tem pacientes. Nada a fazer.")
+                return
+        elif Consultorio.objects.filter(nome=NOME_DEMO).exists():
             self.stdout.write("O consultório demo já existe. Nada a fazer.")
             return
         dominio = opcoes["dominio"]
         with override_settings(EMAIL_BACKEND="django.core.mail.backends.dummy.EmailBackend"):  # sem e-mails na carga
-            credenciais, consultorio = self._criar(dominio)
+            with transaction.atomic():
+                credenciais, consultorio = self._criar(dominio, existente)
         self._imprimir(credenciais, consultorio)
+
+    def _complementar(self, consultorio, dominio, blocos):
+        with contexto(consultorio_id=consultorio.pk):
+            if not blocos and _demo_extras.ja_populado(consultorio):
+                self.stdout.write("Os dados complementares já existem. Nada a fazer.")
+                return
+            usuarios = {nome: Usuario.objects.get(email=f"{nome}@{dominio}") for nome in ("assistente", "psicologa", "psiquiatra")}
+            admin = Vinculo.objects.filter(consultorio=consultorio, perfil=Perfil.ADMIN).select_related("usuario").first().usuario
+            with override_settings(EMAIL_BACKEND="django.core.mail.backends.dummy.EmailBackend"):
+                self._extras(consultorio, dominio, admin, usuarios["assistente"], usuarios["psicologa"], usuarios["psiquiatra"],
+                             usuarios["psicologa"].profissional, usuarios["psiquiatra"].profissional, blocos)
+
+    def _extras(self, consultorio, dominio, admin, assistente, psicologa, psiquiatra, prof_psi, prof_med, blocos=None):
+        self.stdout.write("Dados complementares:")
+        falhas = _demo_extras.popular_extras(
+            consultorio, dominio, admin=admin, assistente=assistente, psicologa=psicologa, psiquiatra=psiquiatra,
+            prof_psi=prof_psi, prof_med=prof_med, aviso=self.stdout.write, blocos=blocos,
+        )
+        if falhas:
+            self.stdout.write(self.style.WARNING(f"{len(falhas)} bloco(s) falharam (os demais foram gravados)."))
 
     # ------------------------------------------------------------------ montagem
 
-    def _criar(self, dominio):
+    def _criar(self, dominio, existente=None):
         credenciais = []
 
         def usuario(email_local, nome, papel, *, perfil=None, staff=False, com_2fa=False):
@@ -74,22 +116,32 @@ class Command(BaseCommand):
         plano = Plano.objects.get_or_create(
             nome="Demonstração", defaults={"limite_pacientes_ativos": 50, "limite_profissionais": 5, "preco": D("199.00")}
         )[0]
-        consultorio = Consultorio.objects.create(
-            nome=NOME_DEMO, slug="clinica-demo-meupsiq", documento="", plano=plano, cobra_falta_tardia=True
-        )
-
-        operador_plataforma = usuario("operador", "Atendente da Plataforma", "Operador da plataforma (equipe MeuPSIQ)", staff=True, com_2fa=True)
-        admin = usuario("admin", "Beatriz Admin", "Administrador do consultório")
+        if existente:
+            consultorio = existente
+            if consultorio.plano_id is None:
+                consultorio.plano = plano
+                consultorio.save()
+            with contexto(consultorio_id=consultorio.pk):
+                admin = Vinculo.objects.filter(consultorio=consultorio, perfil=Perfil.ADMIN).select_related("usuario").first().usuario
+            credenciais.append({"papel": "Administrador do consultório (já existente, senha inalterada)", "email": admin.email, "senha": "(a atual)", "segredo": "", "nome": admin.nome})
+        else:
+            consultorio = Consultorio.objects.create(
+                nome=NOME_DEMO, slug="clinica-demo-meupsiq", documento="", plano=plano, cobra_falta_tardia=True
+            )
+            usuario("operador", "Atendente da Plataforma", "Operador da plataforma (equipe MeuPSIQ)", staff=True, com_2fa=True)
+            admin = usuario("admin", "Beatriz Admin", "Administrador do consultório")
         assistente = usuario("assistente", "Carla Assistente", "Assistente (secretária)", com_2fa=True)
         psicologa = usuario("psicologa", "Dra. Helena Psicóloga", "Profissional: psicóloga (CRP)", com_2fa=True)
         psiquiatra = usuario("psiquiatra", "Dr. Marcos Psiquiatra", "Profissional: psiquiatra (CRM)", com_2fa=True)
 
         ahora = timezone.now()
-        prof_psi = Profissional.objects.create(usuario=psicologa, tipo="psicologo", conselho="CRP", numero="06/54321", uf="SP", validado_em=ahora)
-        prof_med = Profissional.objects.create(usuario=psiquiatra, tipo="medico", conselho="CRM", numero="123456", uf="SP", validado_em=ahora)
+        prof_psi = Profissional.objects.create(usuario=psicologa, tipo="psicologo", conselho="CRP", numero="06/65432" if existente else "06/54321", uf="SP", validado_em=ahora)
+        prof_med = Profissional.objects.create(usuario=psiquiatra, tipo="medico", conselho="CRM", numero="654321" if existente else "123456", uf="SP", validado_em=ahora)
 
         with contexto(consultorio_id=consultorio.pk):
             for u, perfil in ((admin, Perfil.ADMIN), (assistente, Perfil.ASSISTENTE), (psicologa, Perfil.PROFISSIONAL), (psiquiatra, Perfil.PROFISSIONAL)):
+                if existente and u is admin:
+                    continue
                 Vinculo.objects.create(usuario=u, consultorio=consultorio, perfil=perfil)
             self._dados(consultorio, dominio, credenciais, admin, assistente, psicologa, psiquiatra, prof_psi, prof_med)
         return credenciais, consultorio
@@ -185,6 +237,7 @@ class Command(BaseCommand):
 
         # cobranca da plataforma ao consultorio (mes atual, vence em 10 dias)
         operador.criar_pagamento(consultorio, competencia=date.today(), valor=D("199.00"), vencimento=date.today() + timedelta(days=10))
+        self._extras(consultorio, dominio, admin, assistente, psicologa, psiquiatra, prof_psi, prof_med)
 
     def _imprimir(self, credenciais, consultorio):
         base = settings.MEUPSIQ_URL_BASE.rstrip("/")
