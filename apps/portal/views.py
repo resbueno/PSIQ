@@ -379,6 +379,15 @@ def lgpd_atender(request, pk):
     return redirect("portal:lgpd_lista")
 
 
+@perfil_requerido(*PERFIS_INTERNOS)
+@require_POST
+def lgpd_reabrir(request, pk):
+    solicitacao = get_object_or_404(SolicitacaoLGPD, pk=pk, consultorio=request.consultorio, status="atendida")
+    servico.reabrir_solicitacao_lgpd(request, solicitacao)
+    messages.success(request, "Pedido reaberto.")
+    return redirect("portal:lgpd_lista")
+
+
 # --------------------------------------------------------------------------- notificacoes push
 
 

@@ -185,6 +185,9 @@ def decidir_solicitacao(request, pk):
         if request.POST.get("decisao") == "recusar":
             servico.recusar_solicitacao(request, solicitacao)
             messages.success(request, "Solicitação recusada.")
+        elif request.POST.get("decisao") == "reabrir":
+            servico.reabrir_solicitacao(request, solicitacao)
+            messages.success(request, "Solicitação reaberta: volta a aguardar decisão.")
         else:
             raise ErroAgenda("Decisão desconhecida.")
     except ErroAgenda as erro:

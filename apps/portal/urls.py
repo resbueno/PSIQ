@@ -22,4 +22,5 @@ urlpatterns = [
     path("portal/privacidade/consentimentos/<uuid:pk>/revogar/", views.revogar_consentimento, name="revogar_consentimento"),
     path("lgpd/", views.lgpd_lista, name="lgpd_lista"),
     path("lgpd/<uuid:pk>/atender/", views.lgpd_atender, name="lgpd_atender"),
+    path("lgpd/<uuid:pk>/reabrir/", views.lgpd_reabrir, name="lgpd_reabrir"),
 ]

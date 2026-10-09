@@ -11,5 +11,6 @@
   {% empty %}<tr><td colspan="4">Nenhum pedido aberto.</td></tr>{% endfor %}
   </tbody></table></div>
 <h2>Atendidos recentemente</h2>
-<ul class="lista-simples">{% for s in atendidas %}<li><span>{{ s.paciente.nome }} · {{ s.get_tipo_display }}</span><span class="ajuda">{{ s.atendida_em|date:"d/m/Y" }}</span></li>{% endfor %}</ul>
+<ul class="lista-simples">{% for s in atendidas %}<li><span>{{ s.paciente.nome }} · {{ s.get_tipo_display }}</span><span class="ajuda">{{ s.atendida_em|date:"d/m/Y" }}</span>
+  <form method="post" action="{% url 'portal:lgpd_reabrir' s.pk %}" class="em-linha">{% csrf_token %}<button class="botao secundario" type="submit">Reabrir</button></form></li>{% endfor %}</ul>
 {% endblock %}

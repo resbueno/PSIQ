@@ -314,6 +314,10 @@ def test_pedido_do_titular_chega_a_equipe(client, cena):
     client.post(reverse("portal:lgpd_atender", args=[pedido.pk]))
     definir_contexto(consultorio_id=cena.consultorio.pk)
     assert SolicitacaoLGPD.objects.get().status == "atendida"
+    client.post(reverse("portal:lgpd_reabrir", args=[pedido.pk]))
+    definir_contexto(consultorio_id=cena.consultorio.pk)
+    reaberto = SolicitacaoLGPD.objects.get()
+    assert reaberto.status == "aberta" and reaberto.atendida_em is None
 
 
 def test_aviso_de_consulta_traz_o_link_do_portal(cena):

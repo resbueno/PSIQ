@@ -266,6 +266,24 @@ def recusar_solicitacao(request, solicitacao):
     auditoria.registrar(request, "solicitacao_recusada", "solicitacao", solicitacao.pk)
 
 
+def reabrir_solicitacao(request, solicitacao):
+    """Volta uma solicitacao decidida para 'pendente'. Se foi aprovada, a consulta ainda ativa e cancelada pela equipe."""
+    if solicitacao.status == SolicitacaoHorario.Status.PENDENTE:
+        raise ErroAgenda("Esta solicitação já está aguardando decisão.")
+    consulta = solicitacao.consulta
+    if consulta is not None:
+        if not consulta.ativa and consulta.status != Consulta.Status.CANCELADA:
+            raise ErroAgenda("A consulta desta solicitação já aconteceu e não pode ser desfeita.")
+        if consulta.ativa:
+            cancelar(request, consulta, Consulta.CanceladoPor.EQUIPE)
+    solicitacao.status = SolicitacaoHorario.Status.PENDENTE
+    solicitacao.consulta = None
+    solicitacao.decidida_por_id = None
+    solicitacao.decidida_em = None
+    solicitacao.save()
+    auditoria.registrar(request, "solicitacao_reaberta", "solicitacao", solicitacao.pk)
+
+
 # --------------------------------------------------------------------------- horarios livres
 
 

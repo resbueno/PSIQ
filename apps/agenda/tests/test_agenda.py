@@ -198,6 +198,31 @@ def test_solicitacao_recusada(cenario, fazer_request):
     assert solicitacao.status == SolicitacaoHorario.Status.RECUSADA and not Consulta.objects.exists()
 
 
+def test_solicitacao_recusada_pode_ser_reaberta(cenario, fazer_request):
+    request = fazer_request(cenario.assistente, cenario.consultorio)
+    solicitacao = servico.criar_solicitacao(
+        request, paciente=cenario.paciente, profissional=cenario.profissional, horario=amanha(9), tipo="presencial"
+    )
+    servico.recusar_solicitacao(request, solicitacao)
+    servico.reabrir_solicitacao(request, solicitacao)
+    assert solicitacao.status == SolicitacaoHorario.Status.PENDENTE and solicitacao.decidida_em is None
+    with pytest.raises(ErroAgenda, match="aguardando"):
+        servico.reabrir_solicitacao(request, solicitacao)
+
+
+def test_reabrir_solicitacao_aprovada_cancela_a_consulta_ativa(cenario, fazer_request):
+    request = fazer_request(cenario.assistente, cenario.consultorio)
+    solicitacao = servico.criar_solicitacao(
+        request, paciente=cenario.paciente, profissional=cenario.profissional, horario=amanha(9), tipo="presencial"
+    )
+    consulta = servico.aprovar_solicitacao(request, solicitacao)
+    servico.reabrir_solicitacao(request, solicitacao)
+    consulta.refresh_from_db()
+    assert consulta.status == Consulta.Status.CANCELADA
+    assert solicitacao.status == SolicitacaoHorario.Status.PENDENTE and solicitacao.consulta is None
+    servico.aprovar_solicitacao(request, solicitacao)  # o horario voltou a ficar livre
+
+
 def test_horarios_livres_seguem_as_regras_e_descontam_consultas(cenario, fazer_request):
     dia = (timezone.now().astimezone(SP) + timedelta(days=7)).date()
     AgendaRegra.objects.create(

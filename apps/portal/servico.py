@@ -119,6 +119,13 @@ def abrir_solicitacao_lgpd(request, paciente, tipo, mensagem=""):
     return solicitacao
 
 
+def reabrir_solicitacao_lgpd(request, solicitacao):
+    solicitacao.status = SolicitacaoLGPD.Status.ABERTA
+    solicitacao.atendida_por_id = solicitacao.atendida_em = None
+    solicitacao.save()
+    auditoria.registrar(request, "lgpd_solicitacao_reaberta", "solicitacao_lgpd", solicitacao.pk)
+
+
 def atender_solicitacao_lgpd(request, solicitacao):
     solicitacao.status, solicitacao.atendida_por_id, solicitacao.atendida_em = (
         SolicitacaoLGPD.Status.ATENDIDA, request.user.pk, timezone.now(),

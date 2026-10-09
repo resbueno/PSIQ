@@ -18,6 +18,7 @@
   </tbody></table></div>
 <h2>Decididas recentemente</h2>
 <ul class="lista-simples">
-{% for s in decididas %}<li><span>{{ s.paciente.nome }} · {{ s.horario_desejado|date:"d/m/Y H:i" }}</span><span class="etiqueta">{{ s.get_status_display }}</span></li>{% empty %}<li>Nada por aqui ainda.</li>{% endfor %}
+{% for s in decididas %}<li><span>{{ s.paciente.nome }} · {{ s.horario_desejado|date:"d/m/Y H:i" }}</span><span class="etiqueta">{{ s.get_status_display }}</span>
+  <form method="post" action="{% url 'agenda:decidir_solicitacao' s.pk %}" class="em-linha">{% csrf_token %}<input type="hidden" name="decisao" value="reabrir"><button class="botao secundario" type="submit">Reabrir</button></form></li>{% empty %}<li>Nada por aqui ainda.</li>{% endfor %}
 </ul>
 {% endblock %}
