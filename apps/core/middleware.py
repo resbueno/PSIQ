@@ -14,6 +14,7 @@ from django.utils import timezone
 from apps.contas.models import Perfil, SessaoDispositivo, Vinculo
 from apps.plataforma.models import Consultorio
 
+from .permissoes import segundo_fator_satisfeito
 from .tenancy import definir_contexto, limpar_contexto
 
 logger = logging.getLogger(__name__)
@@ -115,6 +116,8 @@ class SegundoFatorObrigatorioMiddleware:
                 exige = usuario.is_staff or Vinculo.objects.filter(
                     usuario=usuario, perfil=Perfil.PROFISSIONAL, ativo=True
                 ).exists()
+                if exige and not usuario.is_staff and segundo_fator_satisfeito(request):
+                    exige = False
                 if exige:
                     messages.warning(request, "Ative a verificação em duas etapas para continuar.")
                     return redirect("contas:configurar_2fa")

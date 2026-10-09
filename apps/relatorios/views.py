@@ -9,7 +9,7 @@ from django.views.decorators.http import require_POST
 
 from apps.auditoria import servico as auditoria
 from apps.contas.models import Perfil
-from apps.core.permissoes import PERFIS_INTERNOS, perfil_requerido
+from apps.core.permissoes import PERFIS_INTERNOS, perfil_requerido, segundo_fator_satisfeito
 from apps.pacientes.servico import profissional_da_requisicao
 
 from . import exportacao, saida, servico
@@ -93,7 +93,7 @@ def exportar_consultorio(request):
 @perfil_requerido(Perfil.PROFISSIONAL)
 @require_POST
 def exportar_prontuarios(request):
-    if not request.user.segundo_fator_ativo:  # leitura em massa de prontuarios exige 2FA
+    if not segundo_fator_satisfeito(request):  # leitura em massa de prontuarios exige 2FA
         messages.warning(request, "Ative a verificação em duas etapas para exportar prontuários.")
         return redirect("contas:configurar_2fa")
     return _zip_resposta(exportacao.gerar_zip_prontuarios(request, request.user.profissional), f"meupsiq-prontuarios-{date.today():%Y%m%d}.zip")

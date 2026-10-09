@@ -37,3 +37,13 @@ def consultorio_requerido(view):
         return view(request, *args, **kwargs)
 
     return envolvida
+
+
+def segundo_fator_satisfeito(request):
+    """2FA ativo, ou consultorio de demonstracao listado em MEUPSIQ_CONSULTORIOS_SEM_2FA (nunca em producao)."""
+    from django.conf import settings
+
+    if request.user.segundo_fator_ativo:
+        return True
+    consultorio = getattr(request, "consultorio", None)
+    return bool(consultorio and consultorio.slug in settings.MEUPSIQ_CONSULTORIOS_SEM_2FA)

@@ -14,7 +14,7 @@ from apps.agenda.models import Consulta
 from apps.agenda.servico import profissionais_do_consultorio
 from apps.auditoria import servico as auditoria
 from apps.contas.models import Perfil, Usuario
-from apps.core.permissoes import PERFIS_INTERNOS, perfil_requerido
+from apps.core.permissoes import PERFIS_INTERNOS, perfil_requerido, segundo_fator_satisfeito
 from apps.core.tenancy import contexto
 from apps.pacientes.models import Paciente
 from apps.pacientes.servico import pacientes_visiveis, profissional_da_requisicao
@@ -35,7 +35,7 @@ def area_de_prontuario(view):
 
     @wraps(view)
     def com_2fa(request, *args, **kwargs):
-        if not request.user.segundo_fator_ativo:
+        if not segundo_fator_satisfeito(request):
             messages.warning(request, "Ative a verificação em duas etapas para acessar prontuários.")
             return redirect("contas:configurar_2fa")
         return view(request, *args, **kwargs)
@@ -243,7 +243,7 @@ def documento_baixar(request, documento_pk):
     """Documento clinico: exige leitura do prontuario (e 2FA). Sem conteudo clinico: qualquer perfil que ve o paciente."""
     documento = get_object_or_404(Documento, pk=documento_pk, consultorio=request.consultorio)
     if documento.chave_id:
-        if not request.user.segundo_fator_ativo:
+        if not segundo_fator_satisfeito(request):
             return redirect("contas:configurar_2fa")
         acesso.exigir_leitura(request, documento.prontuario)
     elif not pacientes_visiveis(request).filter(pk=documento.paciente_id).exists():
