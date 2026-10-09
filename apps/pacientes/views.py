@@ -13,7 +13,7 @@ from apps.core.permissoes import PERFIS_INTERNOS, perfil_requerido
 from apps.core.validadores import somente_digitos
 
 from . import servico
-from .forms import GrupoForm, MesclarForm, PacienteForm, PagadorForm, ResponsavelForm
+from .forms import GrupoEdicaoForm, GrupoForm, MesclarForm, PacienteForm, PagadorForm, ResponsavelForm
 from .models import GrupoAtendimento, ParticipanteGrupo, Paciente, Pagador, ResponsavelLegal
 
 
@@ -173,3 +173,25 @@ def grupo_novo(request):
             auditoria.registrar(request, "grupo_criado", "grupo", grupo.pk)
         return redirect("pacientes:grupos")
     return render(request, "pacientes/form.html", {"form": form, "titulo": "Novo atendimento em grupo"})
+
+
+@perfil_requerido(*PERFIS_INTERNOS)
+def grupo_editar(request, pk):
+    grupo = get_object_or_404(GrupoAtendimento, pk=pk, consultorio=request.consultorio)
+    atuais = list(ParticipanteGrupo.objects.filter(grupo=grupo).values_list("paciente_id", flat=True))
+    candidatos = Paciente.objects.filter(
+        Q(pk__in=servico.pacientes_visiveis(request).filter(ativo=True).values("pk")) | Q(pk__in=atuais)
+    )
+    form = GrupoEdicaoForm(request.POST or None, instance=grupo, pacientes=candidatos, initial={"participantes": atuais})
+    if request.method == "POST" and form.is_valid():
+        with transaction.atomic():
+            grupo = form.save()
+            escolhidos = {p.pk: p for p in form.cleaned_data["participantes"]}
+            ParticipanteGrupo.objects.filter(grupo=grupo).exclude(paciente_id__in=escolhidos).delete()
+            for pk_paciente, paciente in escolhidos.items():
+                if pk_paciente not in atuais:
+                    ParticipanteGrupo.objects.create(consultorio=request.consultorio, grupo=grupo, paciente=paciente)
+            auditoria.registrar(request, "grupo_editado", "grupo", grupo.pk)
+        messages.success(request, "Atendimento em grupo atualizado.")
+        return redirect("pacientes:grupos")
+    return render(request, "pacientes/form.html", {"form": form, "titulo": f"Editar {grupo.nome}"})

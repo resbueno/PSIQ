@@ -4,7 +4,7 @@
 <h1>Casais, famílias e grupos</h1>
 <p><a class="botao" href="{% url 'pacientes:grupo_novo' %}">Novo atendimento em grupo</a></p>
 <ul class="lista-simples">
-{% for g in grupos %}<li><span>{{ g.nome }} <span class="etiqueta">{{ g.get_tipo_display }}</span></span><span class="ajuda">{{ g.participantes.count }} participantes</span></li>
+{% for g in grupos %}<li><span>{{ g.nome }} <span class="etiqueta">{{ g.get_tipo_display }}</span>{% if not g.ativo %}<span class="etiqueta">Inativo</span>{% endif %}</span><span class="ajuda">{{ g.participantes.count }} participantes · <a href="{% url 'pacientes:grupo_editar' g.pk %}">Editar</a></span></li>
 {% empty %}<li>Nenhum grupo cadastrado.</li>{% endfor %}
 </ul>
 {% endblock %}

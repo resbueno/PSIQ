@@ -83,6 +83,11 @@ class GrupoForm(forms.ModelForm):
         return escolhidos
 
 
+class GrupoEdicaoForm(GrupoForm):
+    class Meta(GrupoForm.Meta):
+        fields = ["tipo", "nome", "ativo"]
+
+
 class MesclarForm(forms.Form):
     origem = forms.ModelChoiceField(
         queryset=Paciente.objects.none(),

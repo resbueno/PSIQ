@@ -139,3 +139,26 @@ def test_menor_de_idade():
     adulto = Paciente(nome="A", nascimento=date.today().replace(year=date.today().year - 30))
     assert crianca.menor_de_idade and not adulto.menor_de_idade
     assert not Paciente(nome="Sem data").menor_de_idade
+
+
+def test_edita_grupo_troca_participantes_e_exige_dois(client, clinica, criar_paciente):
+    from apps.pacientes.models import GrupoAtendimento, ParticipanteGrupo
+
+    consultorio, assistente = clinica
+    a, b, c = (criar_paciente(consultorio, n) for n in ("Ana", "Beto", "Caio"))
+    with contexto(consultorio_id=consultorio.pk):
+        grupo = GrupoAtendimento.objects.create(consultorio=consultorio, tipo="casal", nome="Casal Ana e Beto")
+        for p in (a, b):
+            ParticipanteGrupo.objects.create(consultorio=consultorio, grupo=grupo, paciente=p)
+    login(client, assistente.email)
+    url = reverse("pacientes:grupo_editar", args=[grupo.pk])
+    assert client.get(url).status_code == 200
+    invalido = client.post(url, {"tipo": "casal", "nome": "Casal", "ativo": "on", "participantes": [str(a.pk)]})
+    assert invalido.status_code == 200
+    ok = client.post(url, {"tipo": "familia", "nome": "Família Ana", "ativo": "on", "participantes": [str(a.pk), str(c.pk)]})
+    assert ok.status_code == 302
+    definir_contexto(consultorio_id=consultorio.pk)
+    grupo.refresh_from_db()
+    assert grupo.tipo == "familia" and grupo.nome == "Família Ana"
+    assert set(ParticipanteGrupo.objects.filter(grupo=grupo).values_list("paciente__nome", flat=True)) == {"Ana", "Caio"}
+    assert Auditoria.objects.filter(acao="grupo_editado").exists()
